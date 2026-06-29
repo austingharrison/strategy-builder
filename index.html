@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portfolio Model Builder — Convergence Financial</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy:    #404F5E;
+    --navy-mid:#4a5c6d;
+    --slate:   #5a6e7e;
+    --steel:   #F47B20;
+    --ice:     #f5f6f8;
+    --ice-deep:#e8eaed;
+    --gold:    #F47B20;
+    --white:   #ffffff;
+    --text:    #2d3a44;
+    --muted:   #6b7a86;
+    --error:   #c0392b;
+    --success: #1a7a4a;
+    --border:  #d8dde2;
+    --radius:  8px;
+    --shadow:  0 2px 12px rgba(64,79,94,0.10);
+  }
+  body { font-family:'Inter',sans-serif; background:var(--ice); color:var(--text); min-height:100vh; display:flex; flex-direction:column; }
+
+  header { background:var(--navy); padding:14px 40px; display:flex; align-items:center; justify-content:space-between; border-bottom:3px solid var(--gold); }
+  .logo { font-family:'DM Serif Display',serif; color:var(--white); font-size:1.25rem; }
+  .logo span { color:var(--gold); }
+  header p { color:rgba(255,255,255,0.6); font-size:0.78rem; letter-spacing:0.08em; text-transform:uppercase; }
+
+  main { flex:1; display:grid; grid-template-columns:1fr 480px; gap:24px; max-width:1500px; margin:0 auto; width:100%; padding:32px 24px; align-items:start; }
+
+  .section { background:var(--white); border-radius:var(--radius); border:1px solid var(--border); margin-bottom:16px; overflow:hidden; box-shadow:var(--shadow); }
+  .section-header { background:var(--navy); padding:12px 20px; display:flex; align-items:center; justify-content:space-between; }
+  .section-header h2 { color:var(--white); font-size:0.78rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; }
+  .section-badge { background:var(--gold); color:var(--navy); font-size:0.68rem; font-weight:700; padding:2px 8px; border-radius:99px; }
+  .section-body { padding:20px; }
+
+  .field-row { display:grid; grid-template-columns:1fr 160px; align-items:center; gap:12px; padding:8px 0; border-bottom:1px solid var(--ice); }
+  .field-row:last-child { border-bottom:none; }
+  .field-label { font-size:0.84rem; color:var(--text); font-weight:500; }
+  .field-label small { display:block; color:var(--muted); font-size:0.72rem; font-weight:400; margin-top:1px; }
+
+  select { width:100%; padding:7px 10px; border:1.5px solid var(--border); border-radius:6px; font-family:'Inter',sans-serif; font-size:0.82rem; color:var(--text); background:var(--white); cursor:pointer; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%234a6fa5' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; padding-right:28px; transition:border-color 0.15s; }
+  select:focus { outline:none; border-color:var(--steel); }
+  select:disabled { background:var(--ice); color:var(--muted); cursor:not-allowed; opacity:0.7; }
+
+  /* TOGGLE ROW */
+  .toggle-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--ice); }
+  .toggle-row:last-child { border-bottom:none; }
+  .toggle-label { font-size:0.84rem; font-weight:500; color:var(--text); }
+  .toggle-label small { display:block; color:var(--muted); font-size:0.72rem; font-weight:400; }
+  .toggle-switch { position:relative; width:44px; height:24px; flex-shrink:0; }
+  .toggle-switch input { opacity:0; width:0; height:0; }
+  .toggle-track { position:absolute; inset:0; background:var(--border); border-radius:99px; cursor:pointer; transition:background 0.2s; }
+  .toggle-track::after { content:''; position:absolute; left:3px; top:3px; width:18px; height:18px; background:white; border-radius:50%; transition:transform 0.2s; box-shadow:0 1px 4px rgba(0,0,0,0.2); }
+  input:checked + .toggle-track { background:var(--steel); }
+  input:checked + .toggle-track::after { transform:translateX(20px); }
+
+  /* SUB SPLIT */
+  .sub-split { background:var(--ice); border-radius:6px; padding:12px 16px; margin-top:10px; }
+  .sub-split-title { font-size:0.72rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px; }
+  .split-row { display:grid; grid-template-columns:1fr 140px; align-items:center; gap:10px; margin-bottom:8px; }
+  .split-row:last-child { margin-bottom:0; }
+  .split-label { font-size:0.81rem; color:var(--text); }
+  .split-sum { font-size:0.74rem; margin-top:8px; text-align:right; }
+  .split-sum.ok { color:var(--success); font-weight:600; }
+  .split-sum.err { color:var(--error); font-weight:600; }
+
+  .sub-group-label { font-size:0.72rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin:14px 0 8px; }
+  .sub-group-label:first-child { margin-top:4px; }
+
+  /* RIGHT PANEL */
+  .right-panel { position:sticky; top:24px; }
+  .chart-card { background:var(--white); border-radius:var(--radius); border:1px solid var(--border); box-shadow:var(--shadow); overflow:hidden; margin-bottom:16px; }
+  .chart-header { background:var(--navy); padding:12px 20px; border-bottom:3px solid var(--gold); }
+  .chart-header h2 { color:var(--white); font-size:0.78rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; }
+  .chart-body { padding:16px 20px; display:grid; grid-template-columns:170px 1fr; gap:16px; align-items:center; }
+  .chart-body-full { padding:16px 20px; }
+  .chart-wrap { position:relative; height:170px; }
+  .chart-empty { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--muted); font-size:0.75rem; text-align:center; gap:6px; }
+  .chart-empty svg { opacity:0.3; }
+
+  .alloc-bar-wrap { margin-bottom:12px; }
+  .alloc-bar-label { display:flex; justify-content:space-between; font-size:0.74rem; color:var(--muted); margin-bottom:4px; }
+  .alloc-bar-track { height:8px; background:var(--ice-deep); border-radius:99px; overflow:hidden; }
+  .alloc-bar-fill { height:100%; border-radius:99px; background:var(--steel); transition:width 0.3s, background 0.3s; }
+  .alloc-bar-fill.over { background:var(--error); }
+
+  .legend { display:flex; flex-direction:column; gap:4px; overflow-y:auto; max-height:170px; }
+  .legend-item { display:flex; align-items:center; gap:7px; font-size:0.72rem; color:var(--text); }
+  .legend-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+  .legend-pct { margin-left:auto; font-weight:600; color:var(--navy); font-size:0.71rem; white-space:nowrap; padding-left:6px; }
+
+  .model-card { background:var(--white); border-radius:var(--radius); border:1px solid var(--border); box-shadow:var(--shadow); overflow:hidden; }
+  .model-header { background:var(--navy-mid); padding:12px 20px; }
+  .model-header h2 { color:var(--white); font-size:0.78rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; }
+  .model-body { padding:16px 20px; }
+  .model-name-display { font-family:'DM Serif Display',serif; font-size:0.95rem; color:var(--navy); background:var(--ice); border:1.5px solid var(--border); border-radius:6px; padding:12px 14px; min-height:52px; word-break:break-word; line-height:1.4; margin-bottom:12px; }
+  .model-name-display.placeholder { color:var(--muted); font-family:'Inter',sans-serif; font-size:0.8rem; font-style:italic; }
+
+  .copy-btn { width:100%; padding:10px; background:var(--navy); color:var(--white); border:none; border-radius:6px; font-family:'Inter',sans-serif; font-size:0.82rem; font-weight:600; cursor:pointer; letter-spacing:0.04em; transition:background 0.15s; display:flex; align-items:center; justify-content:center; gap:6px; }
+  .copy-btn:hover { background:var(--navy-mid); }
+  .copy-btn:disabled { background:var(--border); cursor:not-allowed; color:var(--muted); }
+
+  .validation-msg { font-size:0.75rem; margin-top:8px; padding:8px 10px; border-radius:5px; background:#fef2f2; color:var(--error); border:1px solid #fecaca; display:none; }
+  .validation-msg.show { display:block; }
+
+  .reset-btn { width:100%; padding:8px; background:transparent; color:var(--muted); border:1.5px solid var(--border); border-radius:6px; font-family:'Inter',sans-serif; font-size:0.78rem; cursor:pointer; margin-top:8px; transition:all 0.15s; }
+  .reset-btn:hover { border-color:var(--steel); color:var(--steel); }
+
+  .inherited-label { font-size:0.82rem; font-weight:600; color:var(--steel); text-align:right; padding:7px 0; }
+
+  /* IMPORT PANEL */
+  .import-section { background:var(--white); border-radius:var(--radius); border:2px dashed var(--border); margin-bottom:16px; overflow:hidden; box-shadow:var(--shadow); transition:border-color 0.2s; }
+  .import-section:focus-within { border-color:var(--steel); border-style:solid; }
+  .import-header { background:var(--navy-mid); padding:12px 20px; display:flex; align-items:center; justify-content:space-between; }
+  .import-header h2 { color:var(--white); font-size:0.78rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; }
+  .import-header span { color:rgba(255,255,255,0.5); font-size:0.72rem; }
+  .import-body { padding:16px 20px; }
+  .import-textarea { width:100%; min-height:60px; padding:10px 12px; border:1.5px solid var(--border); border-radius:6px; font-family:'DM Serif Display',serif; font-size:0.9rem; color:var(--navy); resize:vertical; transition:border-color 0.15s; line-height:1.4; }
+  .import-textarea:focus { outline:none; border-color:var(--steel); }
+  .import-textarea::placeholder { font-family:'Inter',sans-serif; font-size:0.8rem; color:var(--muted); font-style:italic; }
+  .import-btn { margin-top:10px; width:100%; padding:9px; background:var(--navy-mid); color:var(--white); border:none; border-radius:6px; font-family:'Inter',sans-serif; font-size:0.82rem; font-weight:600; cursor:pointer; transition:background 0.15s; }
+  .import-btn:hover { background:var(--navy); }
+
+  /* PARSE PREVIEW */
+  .parse-preview { margin-top:12px; border:1.5px solid var(--border); border-radius:6px; overflow:hidden; display:none; }
+  .parse-preview.show { display:block; }
+  .parse-preview-header { background:var(--ice); padding:8px 12px; font-size:0.72rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+  .parse-preview-body { padding:10px 12px; display:flex; flex-direction:column; gap:5px; max-height:240px; overflow-y:auto; }
+  .parse-item { display:flex; align-items:center; gap:8px; font-size:0.8rem; }
+  .parse-item .pi-label { color:var(--muted); min-width:130px; }
+  .parse-item .pi-value { color:var(--navy); font-weight:600; }
+  .parse-item .pi-warn { color:var(--error); font-style:italic; }
+  .parse-item .pi-dot { width:7px; height:7px; border-radius:50%; background:var(--success); flex-shrink:0; }
+  .parse-item .pi-dot.warn { background:var(--error); }
+  .parse-warnings { padding:8px 12px; background:#fef2f2; border-top:1px solid #fecaca; font-size:0.75rem; color:var(--error); display:none; }
+  .parse-warnings.show { display:block; }
+  .parse-action-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:10px 12px; border-top:1px solid var(--border); background:var(--ice); }
+  .parse-apply-btn { padding:8px; background:var(--navy); color:var(--white); border:none; border-radius:6px; font-family:'Inter',sans-serif; font-size:0.8rem; font-weight:600; cursor:pointer; transition:background 0.15s; }
+  .parse-apply-btn:hover { background:var(--navy-mid); }
+  .parse-cancel-btn { padding:8px; background:transparent; color:var(--muted); border:1.5px solid var(--border); border-radius:6px; font-family:'Inter',sans-serif; font-size:0.8rem; cursor:pointer; transition:all 0.15s; }
+  .parse-cancel-btn:hover { border-color:var(--steel); color:var(--steel); }
+
+  @media (max-width:900px) {
+    main { grid-template-columns:1fr; }
+    .right-panel { position:static; }
+    header { padding:14px 20px; }
+    main { padding:16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABdwAAAGgCAMAAACHRFX/AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAYBQTFRFb4eRoZ6fSVJWV2duzsa783wqiaSxxnVD9Kd1nJma59vI5ubnxtnj9bOJxsfHl7/UqKWl29LCzqqUuMDEx76zorzJ+cOj1uPr9Jxk1tbV/OTVtszaaG5ul7XEj2JD2plv8vT1nGZB84tLrm1CrsjX+vv7sLGxqsXT85RXosPVrMbScFhFgpqm84I1qLW7z3IynMHVqoZqq8bV5evvvrasNEZJ1My/4n5C5JRisKun6camX3Z/y4laWFBFvbu2Sl1j+9G3/NnFxM7Pu7u7tra1n5ydp6Wcnpucp8DP7PDz/vDnzdbavdLe3tbHKkBE6c+0kpONuZiBjndm/vfzMj076o5U9fj60NDOemVUoqqu2p55gl1D/e/keX16qZeKN0xQJjs+epOe+buV2tvcuLa2r7i8s8TNrbK0m5iZop+gP1JYs7Sy49jHwsC+9ZFLnZyU6NW+iIqFkay6uLKstrO04eHhREhCrcHNp8XW5rua1KKCsK2u9IRCPUtS////////dWGengAAAIB0Uk5T/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////wA4BUtnAABWX0lEQVR42uydeUMbR/a1FUSEzBaw2TcLIWEIOCYsBqLBwsZL8DjEGb82E3s8+QGJExQzSUhwsC11f/VXUmvppaq7qruqF+mcfybJgNQqWo+uzj11K6ZCEARBLacYlgCCIAhwhyAIggB3CIIgCHCHIAiCAHcIgiAIcIcgCALcIQiCIMAdgiAIAtwhCIIgwB2CIAgC3CEIggB3CIIgCHCHIAiCAHcIgiAIcIcgCIIAdyc9m5iYuDtS1XGypmPt3++W/6/H+PtDEAS4R0YTE1WWLxQZtFCl/cQE7gQIggD30NbpuyPJZNGd0sm+cjWPGwKCIMA9TFgf6XNLdXMlP7ILxEMQBLgHrcd3R5LpomAlj0F4CIIA96A0IYHrOsKPTDzDDQJB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" alt="Convergence Financial" style="height:48px;"></div></div>
+  <p>Portfolio Model Builder</p>
+</header>
+
+<main>
+  <div class="left-panel">
+
+    <!-- IMPORT PANEL -->
+    <div class="import-section">
+      <div class="import-header">
+        <h2>Import Model Name</h2>
+        <span>Paste a name to auto-fill selections</span>
+      </div>
+      <div class="import-body">
+        <textarea class="import-textarea" id="importInput" placeholder="e.g. CFS Core 80+, 15 Growth, 10 TACRS"></textarea>
+        <button class="import-btn" onclick="parseModelName()">Parse &amp; Preview</button>
+        <div class="parse-preview" id="parsePreview">
+          <div class="parse-preview-header">
+            <span>Detected Selections</span>
+            <span id="parseCount"></span>
+          </div>
+          <div class="parse-preview-body" id="parseBody"></div>
+          <div class="parse-warnings" id="parseWarnings"></div>
+          <div class="parse-action-row">
+            <button class="parse-apply-btn" onclick="applyParsed()">Apply to Form</button>
+            <button class="parse-cancel-btn" onclick="cancelParse()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CORE MODEL -->
+    <div class="section">
+      <div class="section-header">
+        <h2>Core Model</h2>
+        <span class="section-badge">Required</span>
+      </div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field-label">Core Model Type</div>
+          <select id="coreModel" onchange="onCoreModelChange()">
+            <option value="">— Select —</option>
+            <option>CF Core</option>
+            <option>CFS Core</option>
+            <option>CF Active Core</option>
+            <option>CF Faith Based Core</option>
+            <option>CF Faith Based Hybrid Core</option>
+            <option>CF Mutual Fund Core</option>
+            <option>Advisor Custom Core</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Risk Level<small>Equity exposure %</small></div>
+          <select id="riskLevel" onchange="onRiskLevelChange()">
+            <option value="">— Select —</option>
+            <option>100</option><option>95</option><option>90</option><option>85</option>
+            <option>80</option><option>75</option><option>70</option><option>65</option>
+            <option>60</option><option>55</option><option>50</option><option>45</option>
+            <option>40</option><option>35</option><option>30</option><option>25</option>
+            <option>20</option><option>15</option><option>10</option><option>5</option>
+            <option>0</option>
+          </select>
+        </div>
+
+        <!-- EQUITY SPLIT -->
+        <div class="toggle-row" id="equitySplitToggleRow" style="margin-top:10px;">
+          <div class="toggle-label">Customize Equity Split<small>Default: 80% US / 20% International</small></div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="equitySplitToggle" onchange="onEquitySplitToggle()">
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+        <div id="equitySplitRows" style="display:none;">
+          <div class="sub-split">
+            <div class="sub-split-title">Core Equity Allocation (must sum to 100%)</div>
+            <div class="split-row">
+              <div class="split-label">CF Core US Equity</div>
+              <select id="usCore" onchange="onEquityChange('us')">
+                <option value="100">100%</option><option value="90">90%</option>
+                <option value="80" selected>80%</option><option value="70">70%</option>
+                <option value="60">60%</option><option value="50">50%</option>
+                <option value="40">40%</option><option value="30">30%</option>
+                <option value="20">20%</option><option value="10">10%</option>
+                <option value="0">0%</option>
+              </select>
+            </div>
+            <div class="split-row">
+              <div class="split-label">CF Core International Equity</div>
+              <select id="intlCore" onchange="onEquityChange('intl')">
+                <option value="0">0%</option><option value="10">10%</option>
+                <option value="20" selected>20%</option><option value="30">30%</option>
+                <option value="40">40%</option><option value="50">50%</option>
+                <option value="60">60%</option><option value="70">70%</option>
+                <option value="80">80%</option><option value="90">90%</option>
+                <option value="100">100%</option>
+              </select>
+            </div>
+            <div class="split-sum ok" id="equitySplitSum">✓ Sums to 100%</div>
+          </div>
+        </div>
+
+        <!-- FI TOGGLE (always visible) -->
+        <div class="toggle-row" style="margin-top:10px;">
+          <div class="toggle-label">Advisor Custom Fixed Income<small>Replaces standard FI sleeves</small></div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="customFIToggle" onchange="onCustomFIToggle()">
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+
+        <!-- FI SPLIT TOGGLE -->
+        <div class="toggle-row" id="fiSplitToggleRow">
+          <div class="toggle-label">Customize Fixed Income Split<small>Default: 100% Core / 0% Muni</small></div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="fiSplitToggle" onchange="onFISplitToggle()">
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+        <div id="fiSplitRows" style="display:none;">
+          <div class="sub-split">
+            <div class="sub-split-title">Core Fixed Income Allocation (must sum to 100%)</div>
+            <div class="split-row">
+              <div class="split-label">CF Core Fixed Income</div>
+              <select id="cfCoreFI" onchange="onFIChange('core'); recalc();">
+                <option value="100">100%</option><option value="75">75%</option>
+                <option value="50">50%</option><option value="25">25%</option>
+                <option value="0">0%</option>
+              </select>
+            </div>
+            <div class="split-row">
+              <div class="split-label">CF Core Muni Fixed Income</div>
+              <select id="muniCoreFI" onchange="onFIChange('muni'); recalc();">
+                <option value="0">0%</option><option value="25">25%</option>
+                <option value="50">50%</option><option value="75">75%</option>
+                <option value="100">100%</option>
+              </select>
+            </div>
+            <div class="split-sum ok" id="fiSplitSum">✓ Sums to 100%</div>
+          </div>
+        </div>
+
+        <div id="customFIInheritedRow" style="display:none;">
+          <div class="sub-split" style="margin-top:10px;">
+            <div class="split-row">
+              <div class="split-label" style="color:var(--steel);font-weight:600;">Advisor Custom Fixed Income</div>
+              <div class="inherited-label">Inherited from Risk Level</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- HEDGED & TACTICAL -->
+    <div class="section">
+      <div class="section-header">
+        <h2>Hedged &amp; Tactical Strategies</h2>
+        <span class="section-badge" id="hedgedBadge">0% Used</span>
+      </div>
+      <div class="section-body">
+        <div class="field-row"><div class="field-label">Hedged Equity Strategy<small>Hedged</small></div><select class="sleeve-select" id="sleeve-Hedged" data-code="Hedged" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">Tactical Asset Class Rotation<small>TACRS</small></div><select class="sleeve-select" data-code="TACRS" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">Advisor Custom Tactical<small>AC Tactical</small></div><select class="sleeve-select" data-code="AC Tactical" onchange="recalc()"></select></div>
+      </div>
+    </div>
+
+    <!-- STOCK STRATEGIES -->
+    <div class="section">
+      <div class="section-header">
+        <h2>Stock Strategy Add-Ons</h2>
+        <span class="section-badge" id="stockBadge">0% Used</span>
+      </div>
+      <div class="section-body">
+        <div class="field-row"><div class="field-label">Thematic Select Stock<small>SS</small></div><select class="sleeve-select" data-code="SS" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">Faith Based Select Stock<small>FBSS</small></div><select class="sleeve-select" data-code="FBSS" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">Growth Stock<small>Growth</small></div><select class="sleeve-select" data-code="Growth" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">Value Stock<small>Value</small></div><select class="sleeve-select" data-code="Value" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">Income Stock<small>Income</small></div><select class="sleeve-select" data-code="Income" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">GARP Stock<small>GARP</small></div><select class="sleeve-select" data-code="GARP" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">Innovators Select Stock<small>IS</small></div><select class="sleeve-select" data-code="IS" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">Advisor Custom Stock<small>AC Stock</small></div><select class="sleeve-select" data-code="AC Stock" onchange="recalc()"></select></div>
+      </div>
+    </div>
+
+    <!-- ASSET CLASS ADD-ONS -->
+    <div class="section">
+      <div class="section-header">
+        <h2>Asset Class Add-Ons</h2>
+        <span class="section-badge" id="assetBadge">0% Used</span>
+      </div>
+      <div class="section-body">
+        <div class="sub-group-label">Equity</div>
+        <div class="field-row"><div class="field-label">US Large Cap Growth Passive<small>LCG</small></div><select class="sleeve-select" data-code="LCG" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">US Large Cap Growth Active<small>LCG+</small></div><select class="sleeve-select" data-code="LCG+" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">US Large Cap Value Passive<small>LCV</small></div><select class="sleeve-select" data-code="LCV" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">US Large Cap Value Active<small>LCV+</small></div><select class="sleeve-select" data-code="LCV+" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">US SMID Cap Growth Passive<small>SMIDG</small></div><select class="sleeve-select" data-code="SMIDG" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">US SMID Cap Growth Active<small>SMIDG+</small></div><select class="sleeve-select" data-code="SMIDG+" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">US SMID Cap Value Passive<small>SMIDV</small></div><select class="sleeve-select" data-code="SMIDV" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">US SMID Cap Value Active<small>SMIDV+</small></div><select class="sleeve-select" data-code="SMIDV+" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">International Developed Equity<small>DM</small></div><select class="sleeve-select" data-code="DM" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">International Emerging Equity<small>EM</small></div><select class="sleeve-select" data-code="EM" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">Diversified International – Passive<small>INT</small></div><select class="sleeve-select" data-code="INT" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">Diversified International – Active<small>INT+</small></div><select class="sleeve-select" data-code="INT+" onchange="recalc()"></select></div>
+        <div class="sub-group-label">Precious Metals &amp; Alternatives</div>
+        <div class="field-row"><div class="field-label">Gold<small>GLD</small></div><select class="sleeve-select" data-code="GLD" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">Silver<small>SLV</small></div><select class="sleeve-select" data-code="SLV" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">Crypto<small>Crypto</small></div><select class="sleeve-select" data-code="Crypto" onchange="recalc()"></select></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+
+    <div class="model-card" style="margin-bottom:16px;">
+      <div class="model-header"><h2>Generated Model Name</h2></div>
+      <div class="model-body">
+        <div class="model-name-display placeholder" id="modelNameDisplay">Complete selections above to generate model name</div>
+        <div class="validation-msg" id="validationMsg"></div>
+        <button class="copy-btn" id="copyBtn" disabled onclick="copyModelName()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy Model Name
+        </button>
+        <button class="reset-btn" onclick="resetAll()">Reset All Selections</button>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header"><h2>Allocation by Sleeve</h2></div>
+      <div class="chart-body-full" style="padding:12px 20px 4px;">
+        <div class="alloc-bar-wrap">
+          <div class="alloc-bar-label"><span>Sleeve Allocation</span><span id="allocPct">—</span></div>
+          <div class="alloc-bar-track"><div class="alloc-bar-fill" id="allocBar" style="width:0%"></div></div>
+        </div>
+      </div>
+      <div class="chart-body">
+        <div class="chart-wrap">
+          <canvas id="pieChart"></canvas>
+          <div class="chart-empty" id="chartEmpty">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>
+            Select a core model and risk level
+          </div>
+        </div>
+        <div class="legend" id="legend"></div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header"><h2>Style Box Breakdown</h2></div>
+      <div class="chart-body">
+        <div class="chart-wrap">
+          <canvas id="styleChart"></canvas>
+          <div class="chart-empty" id="styleChartEmpty">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>
+            Select a core model and risk level
+          </div>
+        </div>
+        <div class="legend" id="styleLegend"></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+// ─── CONFIG ──────────────────────────────────────────────────────────────────
+const HEDGE_OPTIONS  = [0,5,10,15,20,25,30,35,40,45,50];
+const SLEEVE_OPTIONS = [0,2.5,5,7.5,10,12.5,15,20,25,30,35,40,45,50,55];
+const STOCK_OPTIONS  = [0,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100];
+
+// ─── STYLE BOX CONFIG (update these when core model weights change) ───────────
+// US Core Equity breakdown — must sum to 100
+const US_STYLE = {
+  'Large Cap Growth': 35.5,
+  'Large Cap Value':  29.3,
+  'SMID Growth':      17.6,
+  'SMID Value':       17.6,
+};
+// International Core Equity breakdown — must sum to 100
+const INTL_STYLE = {
+  'Developed International': 66.5,
+  'Emerging International':  33.5,
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Sleeve → style box mapping. Each entry is { styleBox: weight% } and must sum to 100.
+// Sleeves not listed here are passthrough (use their own label).
+const SLEEVE_STYLE_MAP = {
+  'LCG':    { 'Large Cap Growth': 100 },
+  'LCG+':   { 'Large Cap Growth': 100 },
+  'LCV':    { 'Large Cap Value': 100 },
+  'LCV+':   { 'Large Cap Value': 100 },
+  'SMIDG':  { 'SMID Growth': 100 },
+  'SMIDG+': { 'SMID Growth': 100 },
+  'SMIDV':  { 'SMID Value': 100 },
+  'SMIDV+': { 'SMID Value': 100 },
+  'DM':     { 'Developed International': 100 },
+  'EM':     { 'Emerging International': 100 },
+  'INT':    { 'Developed International': 80, 'Emerging International': 20 },
+  'INT+':   { 'Developed International': 80, 'Emerging International': 20 },
+  'Growth': { 'Large Cap Growth': 100 },
+  'GARP':   { 'Large Cap Growth': 100 },
+  'Value':  { 'Large Cap Value': 100 },
+  'Income': { 'Large Cap Value': 100 },
+  'SS':     { 'Large Cap Growth': 50, 'Large Cap Value': 50 },
+  'FBSS':   { 'Large Cap Growth': 50, 'Large Cap Value': 50 },
+  'IS':     { 'Large Cap Growth': 50, 'SMID Growth': 50 },
+};
+// Passthrough sleeves (Gold, Silver, Crypto, TACRS, Hedged, AC Tactical, AC Stock)
+// use their own label — no entry needed above.
+
+// Style box palette (fixed order so colors are consistent)
+const STYLE_BOX_ORDER = ['Large Cap Growth','Large Cap Value','SMID Growth','SMID Value','Developed International','Emerging International','Taxable Fixed Income','Municipal Fixed Income'];
+const STYLE_PALETTE = {
+  'Large Cap Growth':          '#404F5E',
+  'Large Cap Value':           '#F47B20',
+  'SMID Growth':               '#8FAAB8',
+  'SMID Value':                '#c96010',
+  'Developed International':   '#2d6080',
+  'Emerging International':    '#5a8090',
+  'Taxable Fixed Income':      '#6b7a86',
+  'Municipal Fixed Income':    '#b0bec5',
+};
+// Passthrough colors cycle from this list
+const PASS_PALETTE = ['#3d7090','#e09060','#708090','#a0c0d0','#d07030','#4a6a7a','#f0c0a0'];
+
+const SLEEVE_CONFIG = {
+  'Hedged':'hedge', 'TACRS':'hedge', 'AC Tactical':'hedge',
+  'SS':'stock','FBSS':'stock','Growth':'stock','Value':'stock','Income':'stock','GARP':'stock','IS':'stock','AC Stock':'stock',
+  'LCG':'asset','LCG+':'asset','LCV':'asset','LCV+':'asset','SMIDG':'asset','SMIDG+':'asset','SMIDV':'asset','SMIDV+':'asset',
+  'DM':'asset','EM':'asset','INT':'asset','INT+':'asset','GLD':'asset','SLV':'asset','Crypto':'asset'
+};
+
+const SLEEVE_LABELS = {
+  'Hedged':'Hedged Equity','TACRS':'Tactical (TACRS)','AC Tactical':'Advisor Custom Tactical',
+  'SS':'Thematic Select Stock','FBSS':'Faith Based Select Stock','Growth':'Growth Stock',
+  'Value':'Value Stock','Income':'Income Stock','GARP':'GARP Stock',
+  'IS':'Innovators Select Stock','AC Stock':'Advisor Custom Stock',
+  'LCG':'US LC Growth (Passive)','LCG+':'US LC Growth (Active)',
+  'LCV':'US LC Value (Passive)','LCV+':'US LC Value (Active)',
+  'SMIDG':'US SMID Growth (Passive)','SMIDG+':'US SMID Growth (Active)',
+  'SMIDV':'US SMID Value (Passive)','SMIDV+':'US SMID Value (Active)',
+  'DM':'Intl Developed (DM)','EM':'Intl Emerging (EM)',
+  'INT':'Diversified Intl (Passive)','INT+':'Diversified Intl (Active)',
+  'GLD':'Gold','SLV':'Silver','Crypto':'Crypto'
+};
+
+const PALETTE = ['#404F5E','#F47B20','#8FAAB8','#2d6080','#e8a070','#5a8090','#c96010','#3d7090','#f0c0a0','#4a6a7a','#d07030','#6a9aaa','#205070','#e09060','#708090','#a0c0d0'];
+
+const ADVISOR_CUSTOM_CORE = 'Advisor Custom Core';
+
+let chart = null;
+let styleChart = null;
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.sleeve-select').forEach(sel => {
+    const code = sel.dataset.code;
+    const type = SLEEVE_CONFIG[code];
+    const opts = type === 'hedge' ? HEDGE_OPTIONS : type === 'stock' ? STOCK_OPTIONS : SLEEVE_OPTIONS;
+    opts.forEach(v => {
+      const o = document.createElement('option');
+      o.value = v;
+      o.textContent = v + '%';
+      sel.appendChild(o);
+    });
+  });
+  initChart();
+  recalc();
+});
+
+function initChart() {
+  const ctx = document.getElementById('pieChart').getContext('2d');
+  chart = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels:[], datasets:[{ data:[], backgroundColor:[], borderWidth:2, borderColor:'#fff' }] },
+    options: {
+      responsive:true, maintainAspectRatio:false, cutout:'55%',
+      plugins: {
+        legend:{ display:false },
+        tooltip:{ callbacks:{ label: ctx => ` ${ctx.label}: ${ctx.parsed.toFixed(1)}%` } }
+      },
+      animation:{ duration:300 }
+    }
+  });
+
+  const ctx2 = document.getElementById('styleChart').getContext('2d');
+  styleChart = new Chart(ctx2, {
+    type: 'doughnut',
+    data: { labels:[], datasets:[{ data:[], backgroundColor:[], borderWidth:2, borderColor:'#fff' }] },
+    options: {
+      responsive:true, maintainAspectRatio:false, cutout:'55%',
+      plugins: {
+        legend:{ display:false },
+        tooltip:{ callbacks:{ label: ctx => ` ${ctx.label}: ${ctx.parsed.toFixed(1)}%` } }
+      },
+      animation:{ duration:300 }
+    }
+  });
+}
+
+// ─── EVENTS ──────────────────────────────────────────────────────────────────
+function onCoreModelChange() {
+  const isAC = document.getElementById('coreModel').value === ADVISOR_CUSTOM_CORE;
+  const equityToggleRow = document.getElementById('equitySplitToggleRow');
+  if (isAC) {
+    // Hide equity split toggle and reset it
+    equityToggleRow.style.display = 'none';
+    document.getElementById('equitySplitToggle').checked = false;
+    document.getElementById('equitySplitRows').style.display = 'none';
+    document.getElementById('usCore').value = '80';
+    document.getElementById('intlCore').value = '20';
+  } else {
+    equityToggleRow.style.display = 'flex';
+  }
+  recalc();
+}
+
+function onRiskLevelChange() {
+  const risk = parseFloat(document.getElementById('riskLevel').value) || 0;
+  const hedgedSel = document.getElementById('sleeve-Hedged');
+  const coreModel = document.getElementById('coreModel').value;
+  // Set Hedged default to 10 if risk > 5 and not already manually set
+  if (risk > 5) {
+    hedgedSel.value = '10';
+  } else {
+    hedgedSel.value = '0';
+  }
+  recalc();
+}
+
+function onEquitySplitToggle() {
+  const on = document.getElementById('equitySplitToggle').checked;
+  document.getElementById('equitySplitRows').style.display = on ? 'block' : 'none';
+  // Reset to 80/20 when toggled off
+  if (!on) {
+    document.getElementById('usCore').value = '80';
+    document.getElementById('intlCore').value = '20';
+  }
+  recalc();
+}
+
+function onEquityChange(changed) {
+  const usSel   = document.getElementById('usCore');
+  const intlSel = document.getElementById('intlCore');
+  const usOpts   = [100,90,80,70,60,50,40,30,20,10,0];
+  const intlOpts = [0,10,20,30,40,50,60,70,80,90,100];
+
+  if (changed === 'us') {
+    const us = parseFloat(usSel.value) || 0;
+    const remainder = 100 - us;
+    if (intlOpts.includes(remainder)) intlSel.value = remainder;
+  } else {
+    const intl = parseFloat(intlSel.value) || 0;
+    const remainder = 100 - intl;
+    if (usOpts.includes(remainder)) usSel.value = remainder;
+  }
+
+  const us   = parseFloat(usSel.value) || 0;
+  const intl = parseFloat(intlSel.value) || 0;
+  const sum  = us + intl;
+  const el   = document.getElementById('equitySplitSum');
+  el.textContent = sum === 100 ? '✓ Sums to 100%' : `⚠ Current sum: ${sum}% (must equal 100%)`;
+  el.className   = 'split-sum ' + (sum === 100 ? 'ok' : 'err');
+  recalc();
+}
+
+function onCustomFIToggle() {
+  const customOn = document.getElementById('customFIToggle').checked;
+  document.getElementById('fiSplitToggleRow').style.display    = customOn ? 'none' : 'flex';
+  document.getElementById('fiSplitRows').style.display         = customOn ? 'none' : (document.getElementById('fiSplitToggle').checked ? 'block' : 'none');
+  document.getElementById('customFIInheritedRow').style.display = customOn ? 'block' : 'none';
+  if (customOn) document.getElementById('fiSplitToggle').checked = false;
+  recalc();
+}
+
+function onFISplitToggle() {
+  const on = document.getElementById('fiSplitToggle').checked;
+  document.getElementById('fiSplitRows').style.display = on ? 'block' : 'none';
+  if (!on) {
+    document.getElementById('cfCoreFI').value   = '100';
+    document.getElementById('muniCoreFI').value = '0';
+  }
+  recalc();
+}
+
+function onFIChange(changed) {
+  const coreSel = document.getElementById('cfCoreFI');
+  const muniSel = document.getElementById('muniCoreFI');
+  const opts = [0,25,50,75,100];
+
+  if (changed === 'core') {
+    const core = parseFloat(coreSel.value) || 0;
+    const remainder = 100 - core;
+    if (opts.includes(remainder)) muniSel.value = remainder;
+  } else {
+    const muni = parseFloat(muniSel.value) || 0;
+    const remainder = 100 - muni;
+    if (opts.includes(remainder)) coreSel.value = remainder;
+  }
+
+  const core = parseFloat(coreSel.value) || 0;
+  const muni = parseFloat(muniSel.value) || 0;
+  const sum  = core + muni;
+  const el   = document.getElementById('fiSplitSum');
+  el.textContent = sum === 100 ? '✓ Sums to 100%' : `⚠ Current sum: ${sum}% (must equal 100%)`;
+  el.className   = 'split-sum ' + (sum === 100 ? 'ok' : 'err');
+  recalc();
+}
+
+// ─── RECALC ──────────────────────────────────────────────────────────────────
+function recalc() {
+  const coreModel  = document.getElementById('coreModel').value;
+  const riskLevel  = document.getElementById('riskLevel').value;
+  const riskVal    = parseFloat(riskLevel) || 0;
+  const customFI   = document.getElementById('customFIToggle').checked;
+  const equityCustom = document.getElementById('equitySplitToggle').checked;
+  const fiCustom   = document.getElementById('fiSplitToggle').checked;
+
+  const usCore   = equityCustom ? (parseFloat(document.getElementById('usCore').value) || 0) : 80;
+  const intlCore = equityCustom ? (parseFloat(document.getElementById('intlCore').value) || 0) : 20;
+  const cfCoreFI   = (!customFI && fiCustom) ? (parseFloat(document.getElementById('cfCoreFI').value) || 0) : 100;
+  const muniCoreFI = (!customFI && fiCustom) ? (parseFloat(document.getElementById('muniCoreFI').value) || 0) : 0;
+
+  // Gather sleeves
+  const sleeves = {};
+  document.querySelectorAll('.sleeve-select').forEach(sel => {
+    sleeves[sel.dataset.code] = parseFloat(sel.value) || 0;
+  });
+
+  const totalSleeves = Object.values(sleeves).reduce((a,b)=>a+b,0);
+  const fiWeight = 100 - riskVal;
+  const isAdvisorCustom = coreModel === ADVISOR_CUSTOM_CORE;
+
+  // Build chart segments
+  const segments = [];
+  if (coreModel && riskLevel) {
+    const coreEquityTotal = Math.max(0, riskVal - totalSleeves);
+    if (coreEquityTotal > 0) {
+      if (isAdvisorCustom) {
+        segments.push({ label:'Advisor Custom Core', value:coreEquityTotal });
+      } else {
+        const usEq   = coreEquityTotal * (usCore / 100);
+        const intlEq = coreEquityTotal * (intlCore / 100);
+        if (usEq   > 0) segments.push({ label:'US Core Equity', value:usEq });
+        if (intlEq > 0) segments.push({ label:'International Core Equity', value:intlEq });
+      }
+    }
+    if (fiWeight > 0) {
+      if (customFI) {
+        segments.push({ label:'Advisor Custom Fixed Income', value:fiWeight });
+      } else {
+        const fi   = fiWeight * (cfCoreFI / 100);
+        const muni = fiWeight * (muniCoreFI / 100);
+        if (fi   > 0) segments.push({ label:'Taxable Fixed Income', value:fi });
+        if (muni > 0) segments.push({ label:'Municipal Fixed Income', value:muni });
+      }
+    }
+    Object.entries(sleeves).forEach(([code, val]) => {
+      if (val > 0) segments.push({ label: SLEEVE_LABELS[code] || code, value:val });
+    });
+  }
+
+  // Update chart
+  const hasData = segments.length > 0;
+  document.getElementById('chartEmpty').style.display = hasData ? 'none' : 'flex';
+  chart.data.labels = segments.map(s=>s.label);
+  chart.data.datasets[0].data = segments.map(s=>s.value);
+  chart.data.datasets[0].backgroundColor = segments.map((_,i)=>PALETTE[i%PALETTE.length]);
+  chart.update();
+
+  // Legend
+  document.getElementById('legend').innerHTML = segments.map((s,i)=>`
+    <div class="legend-item">
+      <div class="legend-dot" style="background:${PALETTE[i%PALETTE.length]}"></div>
+      <span>${s.label}</span>
+      <span class="legend-pct">${s.value.toFixed(1)}%</span>
+    </div>`).join('');
+
+  // Allocation bar
+  const bar = document.getElementById('allocBar');
+  const pct = riskVal > 0 ? Math.min(totalSleeves/riskVal*100,100) : 0;
+  bar.style.width = pct+'%';
+  bar.className   = 'alloc-bar-fill'+(totalSleeves > riskVal ? ' over':'');
+  document.getElementById('allocPct').textContent = riskVal > 0
+    ? `${totalSleeves.toFixed(1)}% of ${riskVal}% risk level used`
+    : '—';
+
+  // Section badges
+  const sumOf = codes => codes.reduce((a,c)=>a+(sleeves[c]||0),0);
+  document.getElementById('hedgedBadge').textContent = sumOf(['Hedged','TACRS','AC Tactical']).toFixed(1)+'% Used';
+  document.getElementById('stockBadge').textContent  = sumOf(['SS','FBSS','Growth','Value','Income','GARP','IS','AC Stock']).toFixed(1)+'% Used';
+  document.getElementById('assetBadge').textContent  = sumOf(['LCG','LCG+','LCV','LCV+','SMIDG','SMIDG+','SMIDV','SMIDV+','DM','EM','INT','INT+','GLD','SLV','Crypto']).toFixed(1)+'% Used';
+
+  // Style box chart
+  updateStyleChart(coreModel, riskVal, usCore, intlCore, customFI, fiCustom, cfCoreFI, muniCoreFI, sleeves, totalSleeves);
+
+  // Model name
+  buildModelName(coreModel, riskLevel, riskVal, usCore, intlCore, cfCoreFI, muniCoreFI, customFI, equityCustom, fiCustom, sleeves, totalSleeves);
+}
+
+// ─── STYLE BOX CHART ─────────────────────────────────────────────────────────
+function updateStyleChart(coreModel, riskVal, usCore, intlCore, customFI, fiCustom, cfCoreFI, muniCoreFI, sleeves, totalSleeves) {
+  const isEmpty = !coreModel || !riskVal;
+  document.getElementById('styleChartEmpty').style.display = isEmpty ? 'flex' : 'none';
+
+  if (isEmpty) {
+    styleChart.data.labels = [];
+    styleChart.data.datasets[0].data = [];
+    styleChart.update();
+    document.getElementById('styleLegend').innerHTML = '';
+    return;
+  }
+
+  const isAdvisorCustom = coreModel === ADVISOR_CUSTOM_CORE;
+  const fiWeight = 100 - riskVal;
+  const coreEquityTotal = Math.max(0, riskVal - totalSleeves);
+
+  // Accumulate style box buckets
+  const buckets = {}; // label → total %
+  const add = (label, pct) => { buckets[label] = (buckets[label] || 0) + pct; };
+
+  // 1. Core equity — split into US and Intl portions
+  if (coreEquityTotal > 0 && !isAdvisorCustom) {
+    const usPct  = coreEquityTotal * (usCore / 100);
+    const intlPct = coreEquityTotal * (intlCore / 100);
+    // US style boxes
+    Object.entries(US_STYLE).forEach(([box, wt]) => add(box, usPct * wt / 100));
+    // Intl style boxes
+    Object.entries(INTL_STYLE).forEach(([box, wt]) => add(box, intlPct * wt / 100));
+  } else if (coreEquityTotal > 0 && isAdvisorCustom) {
+    add('Advisor Custom Core', coreEquityTotal);
+  }
+
+  // 2. Fixed income
+  if (fiWeight > 0) {
+    if (customFI) {
+      add('Advisor Custom Fixed Income', fiWeight);
+    } else {
+      const coreFIPct = fiWeight * (cfCoreFI / 100);
+      const muniPct   = fiWeight * (muniCoreFI / 100);
+      if (coreFIPct > 0) add('Taxable Fixed Income', coreFIPct);
+      if (muniPct   > 0) add('Municipal Fixed Income', muniPct);
+    }
+  }
+
+  // 3. Add-on sleeves
+  Object.entries(sleeves).forEach(([code, val]) => {
+    if (val === 0) return;
+    const mapping = SLEEVE_STYLE_MAP[code];
+    if (mapping) {
+      Object.entries(mapping).forEach(([box, wt]) => add(box, val * wt / 100));
+    } else {
+      // Passthrough
+      add(SLEEVE_LABELS[code] || code, val);
+    }
+  });
+
+  // Build ordered segments: style boxes first in fixed order, then passthroughs
+  const segments = [];
+  STYLE_BOX_ORDER.forEach(box => {
+    if (buckets[box] && buckets[box] > 0.01) {
+      segments.push({ label: box, value: buckets[box], color: STYLE_PALETTE[box] });
+      delete buckets[box];
+    }
+  });
+  // Remaining are passthroughs
+  let passIdx = 0;
+  Object.entries(buckets).forEach(([label, value]) => {
+    if (value > 0.01) {
+      segments.push({ label, value, color: PASS_PALETTE[passIdx % PASS_PALETTE.length] });
+      passIdx++;
+    }
+  });
+
+  styleChart.data.labels = segments.map(s => s.label);
+  styleChart.data.datasets[0].data = segments.map(s => s.value);
+  styleChart.data.datasets[0].backgroundColor = segments.map(s => s.color);
+  styleChart.update();
+
+  document.getElementById('styleLegend').innerHTML = segments.map(s => `
+    <div class="legend-item">
+      <div class="legend-dot" style="background:${s.color}"></div>
+      <span>${s.label}</span>
+      <span class="legend-pct">${s.value.toFixed(1)}%</span>
+    </div>`).join('');
+}
+
+// ─── MODEL NAME ───────────────────────────────────────────────────────────────
+function buildModelName(coreModel, riskLevel, riskVal, usCore, intlCore, cfCoreFI, muniCoreFI, customFI, equityCustom, fiCustom, sleeves, totalSleeves) {
+  const display = document.getElementById('modelNameDisplay');
+  const msg     = document.getElementById('validationMsg');
+  const copyBtn = document.getElementById('copyBtn');
+
+  const setPlaceholder = (text, errText) => {
+    display.textContent = text;
+    display.className   = 'model-name-display placeholder';
+    if (errText) { msg.textContent = errText; msg.className = 'validation-msg show'; }
+    else { msg.className = 'validation-msg'; }
+    copyBtn.disabled = true;
+  };
+
+  if (!coreModel || !riskLevel) return setPlaceholder('Complete selections above to generate model name', '');
+
+  // Validate equity split if customized
+  if (equityCustom && usCore + intlCore !== 100)
+    return setPlaceholder('Fix core equity split (must sum to 100%)', 'Core equity allocation must sum to 100%.');
+
+  // Validate FI split if customized
+  if (!customFI && fiCustom && cfCoreFI + muniCoreFI !== 100)
+    return setPlaceholder('Fix core fixed income split (must sum to 100%)', 'Core fixed income allocation must sum to 100%.');
+
+  // Validate sleeves vs risk
+  if (totalSleeves > riskVal)
+    return setPlaceholder('Sleeve total exceeds risk level', `Total sleeve allocation (${totalSleeves.toFixed(1)}%) exceeds risk level (${riskVal}%).`);
+
+  const isAdvisorCustom = coreModel === ADVISOR_CUSTOM_CORE;
+  const hedgedVal = sleeves['Hedged'] || 0;
+
+  // Risk level suffix
+  let riskSuffix = '';
+  if (!isAdvisorCustom) {
+    if (hedgedVal === 0)  riskSuffix = ' Unhedged';
+    else if (hedgedVal === 10) riskSuffix = '+';
+    // else: no suffix, Hedged will appear as sleeve
+  }
+
+  const coreModelName = isAdvisorCustom ? 'AC Core' : coreModel;
+  let name = `${coreModelName} ${riskLevel}${riskSuffix}`;
+
+  // Equity split — only if customized
+  if (equityCustom) {
+    name += `, ${usCore}/${intlCore} US Core`;
+  }
+
+  // Fixed income modifiers
+  if (customFI) {
+    name += ', Advisor Custom FI';
+  } else if (fiCustom && muniCoreFI > 0) {
+    name += `, ${muniCoreFI}/${cfCoreFI} Muni`;
+  }
+
+  // Sleeves — ordered, skip Hedged if it's already encoded in riskSuffix
+  const SLEEVE_ORDER = ['Hedged','TACRS','AC Tactical','SS','FBSS','Growth','Value','Income','GARP','IS','AC Stock','LCG','LCG+','LCV','LCV+','SMIDG','SMIDG+','SMIDV','SMIDV+','DM','EM','INT','INT+','GLD','SLV','Crypto'];
+
+  const sleeveparts = [];
+  SLEEVE_ORDER.forEach(code => {
+    const val = sleeves[code] || 0;
+    if (val === 0) return;
+    // Skip Hedged if it's encoded as + or Unhedged
+    if (code === 'Hedged' && !isAdvisorCustom && (hedgedVal === 0 || hedgedVal === 10)) return;
+    sleeveparts.push(`${val} ${code}`);
+  });
+
+  if (sleeveparts.length > 0) {
+    name += ', ' + sleeveparts.join(', ');
+  }
+
+  display.textContent = name;
+  display.className   = 'model-name-display';
+  msg.className       = 'validation-msg';
+  copyBtn.disabled    = false;
+}
+
+// ─── COPY ────────────────────────────────────────────────────────────────────
+function copyModelName() {
+  const name = document.getElementById('modelNameDisplay').textContent;
+  navigator.clipboard.writeText(name).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => {
+      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Model Name`;
+    }, 2000);
+  });
+}
+
+// ─── PARSER ──────────────────────────────────────────────────────────────────
+const CORE_MODELS = ['CF Core','CFS Core','CF Active Core','CF Faith Based Core','CF Faith Based Hybrid Core','CF Mutual Fund Core','Advisor Custom Core'];
+// Map every code variant (case-insensitive) → canonical code
+const CODE_MAP = {
+  'tacrs':'TACRS','ac tactical':'AC Tactical','actactical':'AC Tactical',
+  'ss':'SS','fbss':'FBSS','growth':'Growth','value':'Value','income':'Income',
+  'garp':'GARP','is':'IS','ac stock':'AC Stock','acstock':'AC Stock',
+  'lcg':'LCG','lcg+':'LCG+','lcv':'LCV','lcv+':'LCV+',
+  'smidg':'SMIDG','smidg+':'SMIDG+','smidv':'SMIDV','smidv+':'SMIDV+',
+  'dm':'DM','em':'EM','int':'INT','int+':'INT+',
+  'gld':'GLD','slv':'SLV','crypto':'Crypto',
+  'hedged':'Hedged','hedged equity':'Hedged'
+};
+
+let _parsed = null; // holds last parsed result for applyParsed()
+
+function parseModelName() {
+  const raw = document.getElementById('importInput').value.trim();
+  if (!raw) return;
+
+  const result = { coreModel:null, riskLevel:null, hedgedMode:null, equitySplit:null, customFI:false, muni:false, sleeves:{}, warnings:[], advisorInitials:null };
+
+  // Split on commas — first segment is always "CoreModel RiskLevel[+/Unhedged]"
+  const parts = raw.split(',').map(p => p.trim());
+  const head  = parts[0];
+
+  // Check for Advisor Custom pattern: "AC {2-3 initials} Core {risk}"
+  const acMatch = head.match(/^AC\s+([A-Za-z]{2,3})\s+Core\s+(\d+)(\+|\s+Unhedged)?/i);
+  if (acMatch) {
+    result.coreModel       = 'Advisor Custom Core';
+    result.advisorInitials = acMatch[1].toUpperCase();
+    result.riskLevel       = acMatch[2];
+    const suffix = (acMatch[3] || '').trim().toLowerCase();
+    if (suffix === '+')          result.hedgedMode = 'plus';
+    else if (suffix === 'unhedged') result.hedgedMode = 'unhedged';
+    else                            result.hedgedMode = 'none';
+  } else {
+    // Standard core model extraction (longest match first)
+    const sortedModels = [...CORE_MODELS].sort((a,b) => b.length - a.length);
+    let matchedModel = null;
+    let afterModel   = head;
+    for (const m of sortedModels) {
+      if (head.toLowerCase().startsWith(m.toLowerCase())) {
+        matchedModel = m;
+        afterModel   = head.slice(m.length).trim();
+        break;
+      }
+    }
+    if (!matchedModel) result.warnings.push(`Could not identify a Core Model in "${head}".`);
+    else result.coreModel = matchedModel;
+
+    // Extract risk level + hedged suffix
+    const riskMatch = afterModel.match(/^(\d+)(\+|\s+Unhedged)?/i);
+    if (riskMatch) {
+      result.riskLevel = riskMatch[1];
+      const suffix = (riskMatch[2] || '').trim().toLowerCase();
+      if (suffix === '+')             result.hedgedMode = 'plus';
+      else if (suffix === 'unhedged') result.hedgedMode = 'unhedged';
+      else                            result.hedgedMode = 'none';
+    } else {
+      result.warnings.push(`Could not identify a Risk Level in "${afterModel}".`);
+    }
+  }
+
+  // Parse remaining segments
+  for (let i = 1; i < parts.length; i++) {
+    const seg = parts[i].trim();
+    if (!seg) continue;
+
+    // Equity split: "60/40 US Core"
+    const equityMatch = seg.match(/^(\d+)\/(\d+)\s+US\s+Core$/i);
+    if (equityMatch) {
+      result.equitySplit = { us: parseInt(equityMatch[1]), intl: parseInt(equityMatch[2]) };
+      continue;
+    }
+
+    // Advisor Custom FI — standard or AC initials pattern
+    if (/^advisor\s+custom\s+fi$/i.test(seg)) { result.customFI = true; continue; }
+    if (/^AC\s+[A-Za-z]{2,3}\s+FI$/i.test(seg)) { result.customFI = true; continue; }
+
+    // Muni split: "75/25 Muni"
+    const muniMatch = seg.match(/^(\d+)\/(\d+)\s+Muni$/i);
+    if (muniMatch) {
+      result.muni = true;
+      result.muniSplit = { muni: parseInt(muniMatch[1]), core: parseInt(muniMatch[2]) };
+      continue;
+    }
+
+    // AC initials Stock: "20 AC AR Stock" → AC Stock sleeve
+    const acStockMatch = seg.match(/^([\d.]+)\s+AC\s+[A-Za-z]{2,3}\s+Stock$/i);
+    if (acStockMatch) { result.sleeves['AC Stock'] = parseFloat(acStockMatch[1]); continue; }
+
+    // AC initials Tactical: "15 AC AR Tactical" → AC Tactical sleeve
+    const acTacticalMatch = seg.match(/^([\d.]+)\s+AC\s+[A-Za-z]{2,3}\s+Tactical$/i);
+    if (acTacticalMatch) { result.sleeves['AC Tactical'] = parseFloat(acTacticalMatch[1]); continue; }
+
+    // Standard sleeve: "{weight} {code}"
+    const sleeveMatch = seg.match(/^([\d.]+)\s+(.+)$/);
+    if (sleeveMatch) {
+      const weight  = parseFloat(sleeveMatch[1]);
+      const codeRaw = sleeveMatch[2].trim().toLowerCase();
+      const code    = CODE_MAP[codeRaw];
+      if (code) {
+        result.sleeves[code] = weight;
+      } else {
+        result.warnings.push(`Unknown sleeve code: "${sleeveMatch[2]}"`);
+      }
+      continue;
+    }
+
+    result.warnings.push(`Could not parse segment: "${seg}"`);
+  }
+
+  _parsed = result;
+  renderParsePreview(result);
+}
+
+function renderParsePreview(r) {
+  const preview  = document.getElementById('parsePreview');
+  const body     = document.getElementById('parseBody');
+  const warnings = document.getElementById('parseWarnings');
+  const count    = document.getElementById('parseCount');
+
+  const items = [];
+
+  if (r.coreModel) {
+    let coreDisplay = r.coreModel;
+    if (r.advisorInitials) coreDisplay += ` (Initials: ${r.advisorInitials})`;
+    items.push({ label:'Core Model', value: coreDisplay });
+  }
+  else             items.push({ label:'Core Model', warn:'Not found' });
+
+  if (r.riskLevel) {
+    let riskDisplay = `${r.riskLevel}%`;
+    if (r.hedgedMode === 'plus')     riskDisplay += ' (Hedged 10% default)';
+    if (r.hedgedMode === 'unhedged') riskDisplay += ' (Hedged 0%)';
+    items.push({ label:'Risk Level', value: riskDisplay });
+  } else {
+    items.push({ label:'Risk Level', warn:'Not found' });
+  }
+
+  if (r.equitySplit) items.push({ label:'Equity Split', value:`${r.equitySplit.us}% US / ${r.equitySplit.intl}% International` });
+  else               items.push({ label:'Equity Split', value:'Default (80/20)' });
+
+  if (r.customFI)       items.push({ label:'Fixed Income', value:'Advisor Custom FI' });
+  else if (r.muni && r.muniSplit) items.push({ label:'Fixed Income', value:`${r.muniSplit.muni}% Muni / ${r.muniSplit.core}% Core` });
+  else if (r.muni)      items.push({ label:'Fixed Income', value:'Muni split enabled' });
+  else                  items.push({ label:'Fixed Income', value:'Default (100% Core)' });
+
+  Object.entries(r.sleeves).forEach(([code, weight]) => {
+    items.push({ label: SLEEVE_LABELS[code] || code, value:`${weight}%` });
+  });
+
+  const warnCount = r.warnings.length;
+  const okCount   = items.filter(i => !i.warn).length;
+  count.textContent = `${okCount} detected${warnCount ? ', ' + warnCount + ' warning' + (warnCount>1?'s':'') : ''}`;
+
+  body.innerHTML = items.map(item => `
+    <div class="parse-item">
+      <div class="pi-dot${item.warn ? ' warn':''}"></div>
+      <span class="pi-label">${item.label}</span>
+      ${item.warn
+        ? `<span class="pi-warn">⚠ ${item.warn}</span>`
+        : `<span class="pi-value">${item.value}</span>`}
+    </div>`).join('');
+
+  if (warnCount > 0) {
+    warnings.innerHTML = r.warnings.map(w => `<div>⚠ ${w}</div>`).join('');
+    warnings.className = 'parse-warnings show';
+  } else {
+    warnings.className = 'parse-warnings';
+  }
+
+  preview.className = 'parse-preview show';
+}
+
+function applyParsed() {
+  if (!_parsed) return;
+  const r = _parsed;
+
+  // Reset first
+  resetAll();
+
+  // Core model
+  if (r.coreModel) document.getElementById('coreModel').value = r.coreModel;
+
+  // Risk level
+  if (r.riskLevel) {
+    document.getElementById('riskLevel').value = r.riskLevel;
+    // Set hedged based on suffix
+    const hedgedSel = document.getElementById('sleeve-Hedged');
+    if (r.hedgedMode === 'plus')     hedgedSel.value = '10';
+    else if (r.hedgedMode === 'unhedged') hedgedSel.value = '0';
+    else if (parseInt(r.riskLevel) > 5)  hedgedSel.value = '10'; // default
+  }
+
+  // Equity split
+  if (r.equitySplit) {
+    document.getElementById('equitySplitToggle').checked = true;
+    document.getElementById('equitySplitRows').style.display = 'block';
+    document.getElementById('usCore').value   = r.equitySplit.us;
+    document.getElementById('intlCore').value = r.equitySplit.intl;
+    onEquityChange('us');
+  }
+
+  // Custom FI
+  if (r.customFI) {
+    document.getElementById('customFIToggle').checked = true;
+    onCustomFIToggle();
+  } else if (r.muni) {
+    document.getElementById('fiSplitToggle').checked = true;
+    document.getElementById('fiSplitRows').style.display = 'block';
+    if (r.muniSplit) {
+      document.getElementById('cfCoreFI').value   = r.muniSplit.core;
+      document.getElementById('muniCoreFI').value = r.muniSplit.muni;
+    } else {
+      document.getElementById('cfCoreFI').value   = '50';
+      document.getElementById('muniCoreFI').value = '50';
+    }
+  }
+
+  // Sleeves
+  Object.entries(r.sleeves).forEach(([code, weight]) => {
+    const sel = document.querySelector(`.sleeve-select[data-code="${code}"]`);
+    if (sel) sel.value = weight;
+  });
+
+  // Hide preview, clear input
+  cancelParse();
+  recalc();
+}
+
+function cancelParse() {
+  document.getElementById('parsePreview').className = 'parse-preview';
+  document.getElementById('importInput').value = '';
+  _parsed = null;
+}
+
+// ─── RESET ───────────────────────────────────────────────────────────────────
+function resetAll() {
+  document.getElementById('coreModel').value  = '';
+  document.getElementById('riskLevel').value  = '';
+  document.getElementById('equitySplitToggle').checked = false;
+  document.getElementById('fiSplitToggle').checked     = false;
+  document.getElementById('customFIToggle').checked    = false;
+  document.getElementById('usCore').value     = '80';
+  document.getElementById('intlCore').value   = '20';
+  document.getElementById('cfCoreFI').value   = '100';
+  document.getElementById('muniCoreFI').value = '0';
+  document.getElementById('equitySplitRows').style.display    = 'none';
+  document.getElementById('equitySplitToggleRow').style.display = 'flex';
+  document.getElementById('fiSplitRows').style.display        = 'none';
+  document.getElementById('fiSplitToggleRow').style.display   = 'flex';
+  document.getElementById('customFIInheritedRow').style.display = 'none';
+  document.querySelectorAll('.sleeve-select').forEach(s => s.value = '0');
+  recalc();
+}
+</script>
+</body>
+</html>
