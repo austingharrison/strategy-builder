@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portfolio Model Builder — Convergence Financial</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy:    #0f1f3d;
+    --navy-mid:#1a3260;
+    --slate:   #2d4a7a;
+    --steel:   #4a6fa5;
+    --ice:     #e8eef7;
+    --ice-deep:#d0ddf0;
+    --gold:    #c9a84c;
+    --white:   #ffffff;
+    --text:    #1a2740;
+    --muted:   #5a6e8a;
+    --error:   #c0392b;
+    --success: #1a7a4a;
+    --border:  #c5d3e8;
+    --radius:  8px;
+    --shadow:  0 2px 12px rgba(15,31,61,0.10);
+  }
+  body { font-family:'Inter',sans-serif; background:var(--ice); color:var(--text); min-height:100vh; display:flex; flex-direction:column; }
+
+  header { background:var(--navy); padding:18px 40px; display:flex; align-items:center; justify-content:space-between; border-bottom:3px solid var(--gold); }
+  .logo { font-family:'DM Serif Display',serif; color:var(--white); font-size:1.25rem; }
+  .logo span { color:var(--gold); }
+  header p { color:rgba(255,255,255,0.5); font-size:0.78rem; letter-spacing:0.08em; text-transform:uppercase; }
+
+  main { flex:1; display:grid; grid-template-columns:1fr 360px; gap:24px; max-width:1400px; margin:0 auto; width:100%; padding:32px 24px; align-items:start; }
+
+  .section { background:var(--white); border-radius:var(--radius); border:1px solid var(--border); margin-bottom:16px; overflow:hidden; box-shadow:var(--shadow); }
+  .section-header { background:var(--navy); padding:12px 20px; display:flex; align-items:center; justify-content:space-between; }
+  .section-header h2 { color:var(--white); font-size:0.78rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; }
+  .section-badge { background:var(--gold); color:var(--navy); font-size:0.68rem; font-weight:700; padding:2px 8px; border-radius:99px; }
+  .section-body { padding:20px; }
+
+  .field-row { display:grid; grid-template-columns:1fr 160px; align-items:center; gap:12px; padding:8px 0; border-bottom:1px solid var(--ice); }
+  .field-row:last-child { border-bottom:none; }
+  .field-label { font-size:0.84rem; color:var(--text); font-weight:500; }
+  .field-label small { display:block; color:var(--muted); font-size:0.72rem; font-weight:400; margin-top:1px; }
+
+  select { width:100%; padding:7px 10px; border:1.5px solid var(--border); border-radius:6px; font-family:'Inter',sans-serif; font-size:0.82rem; color:var(--text); background:var(--white); cursor:pointer; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%234a6fa5' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; padding-right:28px; transition:border-color 0.15s; }
+  select:focus { outline:none; border-color:var(--steel); }
+  select:disabled { background:var(--ice); color:var(--muted); cursor:not-allowed; opacity:0.7; }
+
+  /* TOGGLE ROW */
+  .toggle-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--ice); }
+  .toggle-row:last-child { border-bottom:none; }
+  .toggle-label { font-size:0.84rem; font-weight:500; color:var(--text); }
+  .toggle-label small { display:block; color:var(--muted); font-size:0.72rem; font-weight:400; }
+  .toggle-switch { position:relative; width:44px; height:24px; flex-shrink:0; }
+  .toggle-switch input { opacity:0; width:0; height:0; }
+  .toggle-track { position:absolute; inset:0; background:var(--border); border-radius:99px; cursor:pointer; transition:background 0.2s; }
+  .toggle-track::after { content:''; position:absolute; left:3px; top:3px; width:18px; height:18px; background:white; border-radius:50%; transition:transform 0.2s; box-shadow:0 1px 4px rgba(0,0,0,0.2); }
+  input:checked + .toggle-track { background:var(--steel); }
+  input:checked + .toggle-track::after { transform:translateX(20px); }
+
+  /* SUB SPLIT */
+  .sub-split { background:var(--ice); border-radius:6px; padding:12px 16px; margin-top:10px; }
+  .sub-split-title { font-size:0.72rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px; }
+  .split-row { display:grid; grid-template-columns:1fr 140px; align-items:center; gap:10px; margin-bottom:8px; }
+  .split-row:last-child { margin-bottom:0; }
+  .split-label { font-size:0.81rem; color:var(--text); }
+  .split-sum { font-size:0.74rem; margin-top:8px; text-align:right; }
+  .split-sum.ok { color:var(--success); font-weight:600; }
+  .split-sum.err { color:var(--error); font-weight:600; }
+
+  .sub-group-label { font-size:0.72rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin:14px 0 8px; }
+  .sub-group-label:first-child { margin-top:4px; }
+
+  /* RIGHT PANEL */
+  .right-panel { position:sticky; top:24px; }
+  .chart-card { background:var(--white); border-radius:var(--radius); border:1px solid var(--border); box-shadow:var(--shadow); overflow:hidden; margin-bottom:16px; }
+  .chart-header { background:var(--navy); padding:12px 20px; border-bottom:3px solid var(--gold); }
+  .chart-header h2 { color:var(--white); font-size:0.78rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; }
+  .chart-body { padding:20px; }
+  .chart-wrap { position:relative; height:220px; margin-bottom:16px; }
+  .chart-empty { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--muted); font-size:0.8rem; text-align:center; gap:6px; }
+  .chart-empty svg { opacity:0.3; }
+
+  .alloc-bar-wrap { margin-bottom:16px; }
+  .alloc-bar-label { display:flex; justify-content:space-between; font-size:0.74rem; color:var(--muted); margin-bottom:4px; }
+  .alloc-bar-track { height:8px; background:var(--ice-deep); border-radius:99px; overflow:hidden; }
+  .alloc-bar-fill { height:100%; border-radius:99px; background:var(--steel); transition:width 0.3s, background 0.3s; }
+  .alloc-bar-fill.over { background:var(--error); }
+
+  .legend { display:flex; flex-direction:column; gap:5px; }
+  .legend-item { display:flex; align-items:center; gap:8px; font-size:0.76rem; color:var(--text); }
+  .legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .legend-pct { margin-left:auto; font-weight:600; color:var(--navy); font-size:0.74rem; }
+
+  .model-card { background:var(--white); border-radius:var(--radius); border:1px solid var(--border); box-shadow:var(--shadow); overflow:hidden; }
+  .model-header { background:var(--navy-mid); padding:12px 20px; }
+  .model-header h2 { color:var(--white); font-size:0.78rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; }
+  .model-body { padding:16px 20px; }
+  .model-name-display { font-family:'DM Serif Display',serif; font-size:0.95rem; color:var(--navy); background:var(--ice); border:1.5px solid var(--border); border-radius:6px; padding:12px 14px; min-height:52px; word-break:break-word; line-height:1.4; margin-bottom:12px; }
+  .model-name-display.placeholder { color:var(--muted); font-family:'Inter',sans-serif; font-size:0.8rem; font-style:italic; }
+
+  .copy-btn { width:100%; padding:10px; background:var(--navy); color:var(--white); border:none; border-radius:6px; font-family:'Inter',sans-serif; font-size:0.82rem; font-weight:600; cursor:pointer; letter-spacing:0.04em; transition:background 0.15s; display:flex; align-items:center; justify-content:center; gap:6px; }
+  .copy-btn:hover { background:var(--navy-mid); }
+  .copy-btn:disabled { background:var(--border); cursor:not-allowed; color:var(--muted); }
+
+  .validation-msg { font-size:0.75rem; margin-top:8px; padding:8px 10px; border-radius:5px; background:#fef2f2; color:var(--error); border:1px solid #fecaca; display:none; }
+  .validation-msg.show { display:block; }
+
+  .reset-btn { width:100%; padding:8px; background:transparent; color:var(--muted); border:1.5px solid var(--border); border-radius:6px; font-family:'Inter',sans-serif; font-size:0.78rem; cursor:pointer; margin-top:8px; transition:all 0.15s; }
+  .reset-btn:hover { border-color:var(--steel); color:var(--steel); }
+
+  .inherited-label { font-size:0.82rem; font-weight:600; color:var(--steel); text-align:right; padding:7px 0; }
+
+  /* IMPORT PANEL */
+  .import-section { background:var(--white); border-radius:var(--radius); border:2px dashed var(--border); margin-bottom:16px; overflow:hidden; box-shadow:var(--shadow); transition:border-color 0.2s; }
+  .import-section:focus-within { border-color:var(--steel); border-style:solid; }
+  .import-header { background:var(--navy-mid); padding:12px 20px; display:flex; align-items:center; justify-content:space-between; }
+  .import-header h2 { color:var(--white); font-size:0.78rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; }
+  .import-header span { color:rgba(255,255,255,0.5); font-size:0.72rem; }
+  .import-body { padding:16px 20px; }
+  .import-textarea { width:100%; min-height:60px; padding:10px 12px; border:1.5px solid var(--border); border-radius:6px; font-family:'DM Serif Display',serif; font-size:0.9rem; color:var(--navy); resize:vertical; transition:border-color 0.15s; line-height:1.4; }
+  .import-textarea:focus { outline:none; border-color:var(--steel); }
+  .import-textarea::placeholder { font-family:'Inter',sans-serif; font-size:0.8rem; color:var(--muted); font-style:italic; }
+  .import-btn { margin-top:10px; width:100%; padding:9px; background:var(--navy-mid); color:var(--white); border:none; border-radius:6px; font-family:'Inter',sans-serif; font-size:0.82rem; font-weight:600; cursor:pointer; transition:background 0.15s; }
+  .import-btn:hover { background:var(--navy); }
+
+  /* PARSE PREVIEW */
+  .parse-preview { margin-top:12px; border:1.5px solid var(--border); border-radius:6px; overflow:hidden; display:none; }
+  .parse-preview.show { display:block; }
+  .parse-preview-header { background:var(--ice); padding:8px 12px; font-size:0.72rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+  .parse-preview-body { padding:10px 12px; display:flex; flex-direction:column; gap:5px; max-height:240px; overflow-y:auto; }
+  .parse-item { display:flex; align-items:center; gap:8px; font-size:0.8rem; }
+  .parse-item .pi-label { color:var(--muted); min-width:130px; }
+  .parse-item .pi-value { color:var(--navy); font-weight:600; }
+  .parse-item .pi-warn { color:var(--error); font-style:italic; }
+  .parse-item .pi-dot { width:7px; height:7px; border-radius:50%; background:var(--success); flex-shrink:0; }
+  .parse-item .pi-dot.warn { background:var(--error); }
+  .parse-warnings { padding:8px 12px; background:#fef2f2; border-top:1px solid #fecaca; font-size:0.75rem; color:var(--error); display:none; }
+  .parse-warnings.show { display:block; }
+  .parse-action-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:10px 12px; border-top:1px solid var(--border); background:var(--ice); }
+  .parse-apply-btn { padding:8px; background:var(--navy); color:var(--white); border:none; border-radius:6px; font-family:'Inter',sans-serif; font-size:0.8rem; font-weight:600; cursor:pointer; transition:background 0.15s; }
+  .parse-apply-btn:hover { background:var(--navy-mid); }
+  .parse-cancel-btn { padding:8px; background:transparent; color:var(--muted); border:1.5px solid var(--border); border-radius:6px; font-family:'Inter',sans-serif; font-size:0.8rem; cursor:pointer; transition:all 0.15s; }
+  .parse-cancel-btn:hover { border-color:var(--steel); color:var(--steel); }
+
+  @media (max-width:900px) {
+    main { grid-template-columns:1fr; }
+    .right-panel { position:static; }
+    header { padding:14px 20px; }
+    main { padding:16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Convergence <span>Financial</span></div>
+  <p>Portfolio Model Builder</p>
+</header>
+
+<main>
+  <div class="left-panel">
+
+    <!-- IMPORT PANEL -->
+    <div class="import-section">
+      <div class="import-header">
+        <h2>Import Model Name</h2>
+        <span>Paste a name to auto-fill selections</span>
+      </div>
+      <div class="import-body">
+        <textarea class="import-textarea" id="importInput" placeholder="e.g. CFS Core 80+, 15 Growth, 10 TACRS"></textarea>
+        <button class="import-btn" onclick="parseModelName()">Parse &amp; Preview</button>
+        <div class="parse-preview" id="parsePreview">
+          <div class="parse-preview-header">
+            <span>Detected Selections</span>
+            <span id="parseCount"></span>
+          </div>
+          <div class="parse-preview-body" id="parseBody"></div>
+          <div class="parse-warnings" id="parseWarnings"></div>
+          <div class="parse-action-row">
+            <button class="parse-apply-btn" onclick="applyParsed()">Apply to Form</button>
+            <button class="parse-cancel-btn" onclick="cancelParse()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CORE MODEL -->
+    <div class="section">
+      <div class="section-header">
+        <h2>Core Model</h2>
+        <span class="section-badge">Required</span>
+      </div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field-label">Core Model Type</div>
+          <select id="coreModel" onchange="onCoreModelChange()">
+            <option value="">— Select —</option>
+            <option>CF Core</option>
+            <option>CFS Core</option>
+            <option>CF Active Core</option>
+            <option>CF Faith Based Core</option>
+            <option>CF Faith Based Hybrid Core</option>
+            <option>CF Mutual Fund Core</option>
+            <option>Advisor Custom Core</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Risk Level<small>Equity exposure %</small></div>
+          <select id="riskLevel" onchange="onRiskLevelChange()">
+            <option value="">— Select —</option>
+            <option>100</option><option>95</option><option>90</option><option>85</option>
+            <option>80</option><option>75</option><option>70</option><option>65</option>
+            <option>60</option><option>55</option><option>50</option><option>45</option>
+            <option>40</option><option>35</option><option>30</option><option>25</option>
+            <option>20</option><option>15</option><option>10</option><option>5</option>
+            <option>0</option>
+          </select>
+        </div>
+
+        <!-- EQUITY SPLIT -->
+        <div class="toggle-row" style="margin-top:10px;">
+          <div class="toggle-label">Customize Equity Split<small>Default: 80% US / 20% International</small></div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="equitySplitToggle" onchange="onEquitySplitToggle()">
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+        <div id="equitySplitRows" style="display:none;">
+          <div class="sub-split">
+            <div class="sub-split-title">Core Equity Allocation (must sum to 100%)</div>
+            <div class="split-row">
+              <div class="split-label">CF Core US Equity</div>
+              <select id="usCore" onchange="onEquityChange('us')">
+                <option value="100">100%</option><option value="90">90%</option>
+                <option value="80" selected>80%</option><option value="70">70%</option>
+                <option value="60">60%</option><option value="50">50%</option>
+                <option value="40">40%</option><option value="30">30%</option>
+                <option value="20">20%</option><option value="10">10%</option>
+                <option value="0">0%</option>
+              </select>
+            </div>
+            <div class="split-row">
+              <div class="split-label">CF Core International Equity</div>
+              <select id="intlCore" onchange="onEquityChange('intl')">
+                <option value="0">0%</option><option value="10">10%</option>
+                <option value="20" selected>20%</option><option value="30">30%</option>
+                <option value="40">40%</option><option value="50">50%</option>
+                <option value="60">60%</option><option value="70">70%</option>
+                <option value="80">80%</option><option value="90">90%</option>
+                <option value="100">100%</option>
+              </select>
+            </div>
+            <div class="split-sum ok" id="equitySplitSum">✓ Sums to 100%</div>
+          </div>
+        </div>
+
+        <!-- FI TOGGLE (always visible) -->
+        <div class="toggle-row" style="margin-top:10px;">
+          <div class="toggle-label">Advisor Custom Fixed Income<small>Replaces standard FI sleeves</small></div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="customFIToggle" onchange="onCustomFIToggle()">
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+
+        <!-- FI SPLIT TOGGLE -->
+        <div class="toggle-row" id="fiSplitToggleRow">
+          <div class="toggle-label">Customize Fixed Income Split<small>Default: 100% Core / 0% Muni</small></div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="fiSplitToggle" onchange="onFISplitToggle()">
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+        <div id="fiSplitRows" style="display:none;">
+          <div class="sub-split">
+            <div class="sub-split-title">Core Fixed Income Allocation (must sum to 100%)</div>
+            <div class="split-row">
+              <div class="split-label">CF Core Fixed Income</div>
+              <select id="cfCoreFI" onchange="onFIChange('core'); recalc();">
+                <option value="100">100%</option><option value="75">75%</option>
+                <option value="50">50%</option><option value="25">25%</option>
+                <option value="0">0%</option>
+              </select>
+            </div>
+            <div class="split-row">
+              <div class="split-label">CF Core Muni Fixed Income</div>
+              <select id="muniCoreFI" onchange="onFIChange('muni'); recalc();">
+                <option value="0">0%</option><option value="25">25%</option>
+                <option value="50">50%</option><option value="75">75%</option>
+                <option value="100">100%</option>
+              </select>
+            </div>
+            <div class="split-sum ok" id="fiSplitSum">✓ Sums to 100%</div>
+          </div>
+        </div>
+
+        <div id="customFIInheritedRow" style="display:none;">
+          <div class="sub-split" style="margin-top:10px;">
+            <div class="split-row">
+              <div class="split-label" style="color:var(--steel);font-weight:600;">Advisor Custom Fixed Income</div>
+              <div class="inherited-label">Inherited from Risk Level</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- HEDGED & TACTICAL -->
+    <div class="section">
+      <div class="section-header">
+        <h2>Hedged &amp; Tactical Strategies</h2>
+        <span class="section-badge" id="hedgedBadge">0% Used</span>
+      </div>
+      <div class="section-body">
+        <div class="field-row"><div class="field-label">Hedged Equity Strategy<small>Hedged</small></div><select class="sleeve-select" id="sleeve-Hedged" data-code="Hedged" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">Tactical Asset Class Rotation<small>TACRS</small></div><select class="sleeve-select" data-code="TACRS" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">Advisor Custom Tactical<small>AC Tactical</small></div><select class="sleeve-select" data-code="AC Tactical" onchange="recalc()"></select></div>
+      </div>
+    </div>
+
+    <!-- STOCK STRATEGIES -->
+    <div class="section">
+      <div class="section-header">
+        <h2>Stock Strategy Add-Ons</h2>
+        <span class="section-badge" id="stockBadge">0% Used</span>
+      </div>
+      <div class="section-body">
+        <div class="field-row"><div class="field-label">Thematic Select Stock<small>SS</small></div><select class="sleeve-select" data-code="SS" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">Faith Based Select Stock<small>FBSS</small></div><select class="sleeve-select" data-code="FBSS" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">Growth Stock<small>Growth</small></div><select class="sleeve-select" data-code="Growth" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">Value Stock<small>Value</small></div><select class="sleeve-select" data-code="Value" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">Income Stock<small>Income</small></div><select class="sleeve-select" data-code="Income" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">GARP Stock<small>GARP</small></div><select class="sleeve-select" data-code="GARP" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">Innovators Select Stock<small>IS</small></div><select class="sleeve-select" data-code="IS" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">Advisor Custom Stock<small>AC Stock</small></div><select class="sleeve-select" data-code="AC Stock" onchange="recalc()"></select></div>
+      </div>
+    </div>
+
+    <!-- ASSET CLASS ADD-ONS -->
+    <div class="section">
+      <div class="section-header">
+        <h2>Asset Class Add-Ons</h2>
+        <span class="section-badge" id="assetBadge">0% Used</span>
+      </div>
+      <div class="section-body">
+        <div class="sub-group-label">Equity</div>
+        <div class="field-row"><div class="field-label">US Large Cap Growth Passive<small>LCG</small></div><select class="sleeve-select" data-code="LCG" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">US Large Cap Growth Active<small>LCG+</small></div><select class="sleeve-select" data-code="LCG+" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">US Large Cap Value Passive<small>LCV</small></div><select class="sleeve-select" data-code="LCV" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">US Large Cap Value Active<small>LCV+</small></div><select class="sleeve-select" data-code="LCV+" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">US SMID Cap Growth Passive<small>SMIDG</small></div><select class="sleeve-select" data-code="SMIDG" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">US SMID Cap Growth Active<small>SMIDG+</small></div><select class="sleeve-select" data-code="SMIDG+" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">US SMID Cap Value Passive<small>SMIDV</small></div><select class="sleeve-select" data-code="SMIDV" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">US SMID Cap Value Active<small>SMIDV+</small></div><select class="sleeve-select" data-code="SMIDV+" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">International Developed Equity<small>DM</small></div><select class="sleeve-select" data-code="DM" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">International Emerging Equity<small>EM</small></div><select class="sleeve-select" data-code="EM" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">Diversified International – Passive<small>INT</small></div><select class="sleeve-select" data-code="INT" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">Diversified International – Active<small>INT+</small></div><select class="sleeve-select" data-code="INT+" onchange="recalc()"></select></div>
+        <div class="sub-group-label">Precious Metals &amp; Alternatives</div>
+        <div class="field-row"><div class="field-label">Gold<small>GLD</small></div><select class="sleeve-select" data-code="GLD" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">Silver<small>SLV</small></div><select class="sleeve-select" data-code="SLV" onchange="recalc()"></select></div>
+        <div class="field-row"><div class="field-label">Crypto<small>Crypto</small></div><select class="sleeve-select" data-code="Crypto" onchange="recalc()"></select></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <div class="chart-card">
+      <div class="chart-header"><h2>Allocation Preview</h2></div>
+      <div class="chart-body">
+        <div class="chart-wrap">
+          <canvas id="pieChart"></canvas>
+          <div class="chart-empty" id="chartEmpty">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>
+            Select a core model and risk level to begin
+          </div>
+        </div>
+        <div class="alloc-bar-wrap">
+          <div class="alloc-bar-label"><span>Sleeve Allocation</span><span id="allocPct">—</span></div>
+          <div class="alloc-bar-track"><div class="alloc-bar-fill" id="allocBar" style="width:0%"></div></div>
+        </div>
+        <div class="legend" id="legend"></div>
+      </div>
+    </div>
+
+    <div class="model-card">
+      <div class="model-header"><h2>Generated Model Name</h2></div>
+      <div class="model-body">
+        <div class="model-name-display placeholder" id="modelNameDisplay">Complete selections above to generate model name</div>
+        <div class="validation-msg" id="validationMsg"></div>
+        <button class="copy-btn" id="copyBtn" disabled onclick="copyModelName()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy Model Name
+        </button>
+        <button class="reset-btn" onclick="resetAll()">Reset All Selections</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+// ─── CONFIG ──────────────────────────────────────────────────────────────────
+const HEDGE_OPTIONS  = [0,5,10,15,20,25,30,35,40,45,50];
+const SLEEVE_OPTIONS = [0,2.5,5,7.5,10,12.5,15,20,25,30,35,40,45,50,55];
+const STOCK_OPTIONS  = [0,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100];
+
+const SLEEVE_CONFIG = {
+  'Hedged':'hedge', 'TACRS':'hedge', 'AC Tactical':'hedge',
+  'SS':'stock','FBSS':'stock','Growth':'stock','Value':'stock','Income':'stock','GARP':'stock','IS':'stock','AC Stock':'stock',
+  'LCG':'asset','LCG+':'asset','LCV':'asset','LCV+':'asset','SMIDG':'asset','SMIDG+':'asset','SMIDV':'asset','SMIDV+':'asset',
+  'DM':'asset','EM':'asset','INT':'asset','INT+':'asset','GLD':'asset','SLV':'asset','Crypto':'asset'
+};
+
+const SLEEVE_LABELS = {
+  'Hedged':'Hedged Equity','TACRS':'Tactical (TACRS)','AC Tactical':'Advisor Custom Tactical',
+  'SS':'Thematic Select Stock','FBSS':'Faith Based Select Stock','Growth':'Growth Stock',
+  'Value':'Value Stock','Income':'Income Stock','GARP':'GARP Stock',
+  'IS':'Innovators Select Stock','AC Stock':'Advisor Custom Stock',
+  'LCG':'US LC Growth (Passive)','LCG+':'US LC Growth (Active)',
+  'LCV':'US LC Value (Passive)','LCV+':'US LC Value (Active)',
+  'SMIDG':'US SMID Growth (Passive)','SMIDG+':'US SMID Growth (Active)',
+  'SMIDV':'US SMID Value (Passive)','SMIDV+':'US SMID Value (Active)',
+  'DM':'Intl Developed (DM)','EM':'Intl Emerging (EM)',
+  'INT':'Diversified Intl (Passive)','INT+':'Diversified Intl (Active)',
+  'GLD':'Gold','SLV':'Silver','Crypto':'Crypto'
+};
+
+const PALETTE = ['#1a3260','#2d4a7a','#4a6fa5','#c9a84c','#7a9cc5','#e8b84b','#5b8db8','#a07830','#8aafd4','#d4a44a','#3d6494','#f0d98a','#1e5080','#b89040','#6498c0','#c4943c'];
+
+const ADVISOR_CUSTOM_CORE = 'Advisor Custom Core';
+
+let chart = null;
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.sleeve-select').forEach(sel => {
+    const code = sel.dataset.code;
+    const type = SLEEVE_CONFIG[code];
+    const opts = type === 'hedge' ? HEDGE_OPTIONS : type === 'stock' ? STOCK_OPTIONS : SLEEVE_OPTIONS;
+    opts.forEach(v => {
+      const o = document.createElement('option');
+      o.value = v;
+      o.textContent = v + '%';
+      sel.appendChild(o);
+    });
+  });
+  initChart();
+  recalc();
+});
+
+function initChart() {
+  const ctx = document.getElementById('pieChart').getContext('2d');
+  chart = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels:[], datasets:[{ data:[], backgroundColor:[], borderWidth:2, borderColor:'#fff' }] },
+    options: {
+      responsive:true, maintainAspectRatio:false, cutout:'55%',
+      plugins: {
+        legend:{ display:false },
+        tooltip:{ callbacks:{ label: ctx => ` ${ctx.label}: ${ctx.parsed.toFixed(1)}%` } }
+      },
+      animation:{ duration:300 }
+    }
+  });
+}
+
+// ─── EVENTS ──────────────────────────────────────────────────────────────────
+function onCoreModelChange() { recalc(); }
+
+function onRiskLevelChange() {
+  const risk = parseFloat(document.getElementById('riskLevel').value) || 0;
+  const hedgedSel = document.getElementById('sleeve-Hedged');
+  const coreModel = document.getElementById('coreModel').value;
+  // Set Hedged default to 10 if risk > 5 and not already manually set
+  if (risk > 5) {
+    hedgedSel.value = '10';
+  } else {
+    hedgedSel.value = '0';
+  }
+  recalc();
+}
+
+function onEquitySplitToggle() {
+  const on = document.getElementById('equitySplitToggle').checked;
+  document.getElementById('equitySplitRows').style.display = on ? 'block' : 'none';
+  // Reset to 80/20 when toggled off
+  if (!on) {
+    document.getElementById('usCore').value = '80';
+    document.getElementById('intlCore').value = '20';
+  }
+  recalc();
+}
+
+function onEquityChange(changed) {
+  const usSel   = document.getElementById('usCore');
+  const intlSel = document.getElementById('intlCore');
+  const usOpts   = [100,90,80,70,60,50,40,30,20,10,0];
+  const intlOpts = [0,10,20,30,40,50,60,70,80,90,100];
+
+  if (changed === 'us') {
+    const us = parseFloat(usSel.value) || 0;
+    const remainder = 100 - us;
+    if (intlOpts.includes(remainder)) intlSel.value = remainder;
+  } else {
+    const intl = parseFloat(intlSel.value) || 0;
+    const remainder = 100 - intl;
+    if (usOpts.includes(remainder)) usSel.value = remainder;
+  }
+
+  const us   = parseFloat(usSel.value) || 0;
+  const intl = parseFloat(intlSel.value) || 0;
+  const sum  = us + intl;
+  const el   = document.getElementById('equitySplitSum');
+  el.textContent = sum === 100 ? '✓ Sums to 100%' : `⚠ Current sum: ${sum}% (must equal 100%)`;
+  el.className   = 'split-sum ' + (sum === 100 ? 'ok' : 'err');
+  recalc();
+}
+
+function onCustomFIToggle() {
+  const customOn = document.getElementById('customFIToggle').checked;
+  document.getElementById('fiSplitToggleRow').style.display    = customOn ? 'none' : 'flex';
+  document.getElementById('fiSplitRows').style.display         = customOn ? 'none' : (document.getElementById('fiSplitToggle').checked ? 'block' : 'none');
+  document.getElementById('customFIInheritedRow').style.display = customOn ? 'block' : 'none';
+  if (customOn) document.getElementById('fiSplitToggle').checked = false;
+  recalc();
+}
+
+function onFISplitToggle() {
+  const on = document.getElementById('fiSplitToggle').checked;
+  document.getElementById('fiSplitRows').style.display = on ? 'block' : 'none';
+  if (!on) {
+    document.getElementById('cfCoreFI').value   = '100';
+    document.getElementById('muniCoreFI').value = '0';
+  }
+  recalc();
+}
+
+function onFIChange(changed) {
+  const coreSel = document.getElementById('cfCoreFI');
+  const muniSel = document.getElementById('muniCoreFI');
+  const opts = [0,25,50,75,100];
+
+  if (changed === 'core') {
+    const core = parseFloat(coreSel.value) || 0;
+    const remainder = 100 - core;
+    if (opts.includes(remainder)) muniSel.value = remainder;
+  } else {
+    const muni = parseFloat(muniSel.value) || 0;
+    const remainder = 100 - muni;
+    if (opts.includes(remainder)) coreSel.value = remainder;
+  }
+
+  const core = parseFloat(coreSel.value) || 0;
+  const muni = parseFloat(muniSel.value) || 0;
+  const sum  = core + muni;
+  const el   = document.getElementById('fiSplitSum');
+  el.textContent = sum === 100 ? '✓ Sums to 100%' : `⚠ Current sum: ${sum}% (must equal 100%)`;
+  el.className   = 'split-sum ' + (sum === 100 ? 'ok' : 'err');
+  recalc();
+}
+
+// ─── RECALC ──────────────────────────────────────────────────────────────────
+function recalc() {
+  const coreModel  = document.getElementById('coreModel').value;
+  const riskLevel  = document.getElementById('riskLevel').value;
+  const riskVal    = parseFloat(riskLevel) || 0;
+  const customFI   = document.getElementById('customFIToggle').checked;
+  const equityCustom = document.getElementById('equitySplitToggle').checked;
+  const fiCustom   = document.getElementById('fiSplitToggle').checked;
+
+  const usCore   = equityCustom ? (parseFloat(document.getElementById('usCore').value) || 0) : 80;
+  const intlCore = equityCustom ? (parseFloat(document.getElementById('intlCore').value) || 0) : 20;
+  const cfCoreFI   = (!customFI && fiCustom) ? (parseFloat(document.getElementById('cfCoreFI').value) || 0) : 100;
+  const muniCoreFI = (!customFI && fiCustom) ? (parseFloat(document.getElementById('muniCoreFI').value) || 0) : 0;
+
+  // Gather sleeves
+  const sleeves = {};
+  document.querySelectorAll('.sleeve-select').forEach(sel => {
+    sleeves[sel.dataset.code] = parseFloat(sel.value) || 0;
+  });
+
+  const totalSleeves = Object.values(sleeves).reduce((a,b)=>a+b,0);
+  const fiWeight = 100 - riskVal;
+
+  // Build chart segments
+  const segments = [];
+  if (coreModel && riskLevel) {
+    const coreEquityTotal = Math.max(0, riskVal - totalSleeves);
+    if (coreEquityTotal > 0) {
+      const usEq   = coreEquityTotal * (usCore / 100);
+      const intlEq = coreEquityTotal * (intlCore / 100);
+      if (usEq   > 0) segments.push({ label:'US Core Equity', value:usEq });
+      if (intlEq > 0) segments.push({ label:'International Core Equity', value:intlEq });
+    }
+    if (fiWeight > 0) {
+      if (customFI) {
+        segments.push({ label:'Advisor Custom Fixed Income', value:fiWeight });
+      } else {
+        const fi   = fiWeight * (cfCoreFI / 100);
+        const muni = fiWeight * (muniCoreFI / 100);
+        if (fi   > 0) segments.push({ label:'Core Fixed Income', value:fi });
+        if (muni > 0) segments.push({ label:'Muni Fixed Income', value:muni });
+      }
+    }
+    Object.entries(sleeves).forEach(([code, val]) => {
+      if (val > 0) segments.push({ label: SLEEVE_LABELS[code] || code, value:val });
+    });
+  }
+
+  // Update chart
+  const hasData = segments.length > 0;
+  document.getElementById('chartEmpty').style.display = hasData ? 'none' : 'flex';
+  chart.data.labels = segments.map(s=>s.label);
+  chart.data.datasets[0].data = segments.map(s=>s.value);
+  chart.data.datasets[0].backgroundColor = segments.map((_,i)=>PALETTE[i%PALETTE.length]);
+  chart.update();
+
+  // Legend
+  document.getElementById('legend').innerHTML = segments.map((s,i)=>`
+    <div class="legend-item">
+      <div class="legend-dot" style="background:${PALETTE[i%PALETTE.length]}"></div>
+      <span>${s.label}</span>
+      <span class="legend-pct">${s.value.toFixed(1)}%</span>
+    </div>`).join('');
+
+  // Allocation bar
+  const bar = document.getElementById('allocBar');
+  const pct = riskVal > 0 ? Math.min(totalSleeves/riskVal*100,100) : 0;
+  bar.style.width = pct+'%';
+  bar.className   = 'alloc-bar-fill'+(totalSleeves > riskVal ? ' over':'');
+  document.getElementById('allocPct').textContent = riskVal > 0
+    ? `${totalSleeves.toFixed(1)}% of ${riskVal}% risk level used`
+    : '—';
+
+  // Section badges
+  const sumOf = codes => codes.reduce((a,c)=>a+(sleeves[c]||0),0);
+  document.getElementById('hedgedBadge').textContent = sumOf(['Hedged','TACRS','AC Tactical']).toFixed(1)+'% Used';
+  document.getElementById('stockBadge').textContent  = sumOf(['SS','FBSS','Growth','Value','Income','GARP','IS','AC Stock']).toFixed(1)+'% Used';
+  document.getElementById('assetBadge').textContent  = sumOf(['LCG','LCG+','LCV','LCV+','SMIDG','SMIDG+','SMIDV','SMIDV+','DM','EM','INT','INT+','GLD','SLV','Crypto']).toFixed(1)+'% Used';
+
+  // Model name
+  buildModelName(coreModel, riskLevel, riskVal, usCore, intlCore, cfCoreFI, muniCoreFI, customFI, equityCustom, fiCustom, sleeves, totalSleeves);
+}
+
+// ─── MODEL NAME ──────────────────────────────────────────────────────────────
+function buildModelName(coreModel, riskLevel, riskVal, usCore, intlCore, cfCoreFI, muniCoreFI, customFI, equityCustom, fiCustom, sleeves, totalSleeves) {
+  const display = document.getElementById('modelNameDisplay');
+  const msg     = document.getElementById('validationMsg');
+  const copyBtn = document.getElementById('copyBtn');
+
+  const setPlaceholder = (text, errText) => {
+    display.textContent = text;
+    display.className   = 'model-name-display placeholder';
+    if (errText) { msg.textContent = errText; msg.className = 'validation-msg show'; }
+    else { msg.className = 'validation-msg'; }
+    copyBtn.disabled = true;
+  };
+
+  if (!coreModel || !riskLevel) return setPlaceholder('Complete selections above to generate model name', '');
+
+  // Validate equity split if customized
+  if (equityCustom && usCore + intlCore !== 100)
+    return setPlaceholder('Fix core equity split (must sum to 100%)', 'Core equity allocation must sum to 100%.');
+
+  // Validate FI split if customized
+  if (!customFI && fiCustom && cfCoreFI + muniCoreFI !== 100)
+    return setPlaceholder('Fix core fixed income split (must sum to 100%)', 'Core fixed income allocation must sum to 100%.');
+
+  // Validate sleeves vs risk
+  if (totalSleeves > riskVal)
+    return setPlaceholder('Sleeve total exceeds risk level', `Total sleeve allocation (${totalSleeves.toFixed(1)}%) exceeds risk level (${riskVal}%).`);
+
+  const isAdvisorCustom = coreModel === ADVISOR_CUSTOM_CORE;
+  const hedgedVal = sleeves['Hedged'] || 0;
+
+  // Risk level suffix
+  let riskSuffix = '';
+  if (!isAdvisorCustom) {
+    if (hedgedVal === 0)  riskSuffix = ' Unhedged';
+    else if (hedgedVal === 10) riskSuffix = '+';
+    // else: no suffix, Hedged will appear as sleeve
+  }
+
+  let name = `${coreModel} ${riskLevel}${riskSuffix}`;
+
+  // Equity split — only if customized
+  if (equityCustom) {
+    name += `, ${usCore}/${intlCore} US Core`;
+  }
+
+  // Fixed income modifiers
+  if (customFI) {
+    name += ', Advisor Custom FI';
+  } else if (fiCustom && muniCoreFI > 0) {
+    name += `, ${muniCoreFI}/${cfCoreFI} Muni`;
+  }
+
+  // Sleeves — ordered, skip Hedged if it's already encoded in riskSuffix
+  const SLEEVE_ORDER = ['Hedged','TACRS','AC Tactical','SS','FBSS','Growth','Value','Income','GARP','IS','AC Stock','LCG','LCG+','LCV','LCV+','SMIDG','SMIDG+','SMIDV','SMIDV+','DM','EM','INT','INT+','GLD','SLV','Crypto'];
+
+  const sleeveparts = [];
+  SLEEVE_ORDER.forEach(code => {
+    const val = sleeves[code] || 0;
+    if (val === 0) return;
+    // Skip Hedged if it's encoded as + or Unhedged
+    if (code === 'Hedged' && !isAdvisorCustom && (hedgedVal === 0 || hedgedVal === 10)) return;
+    sleeveparts.push(`${val} ${code}`);
+  });
+
+  if (sleeveparts.length > 0) {
+    name += ', ' + sleeveparts.join(', ');
+  }
+
+  display.textContent = name;
+  display.className   = 'model-name-display';
+  msg.className       = 'validation-msg';
+  copyBtn.disabled    = false;
+}
+
+// ─── COPY ────────────────────────────────────────────────────────────────────
+function copyModelName() {
+  const name = document.getElementById('modelNameDisplay').textContent;
+  navigator.clipboard.writeText(name).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => {
+      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Model Name`;
+    }, 2000);
+  });
+}
+
+// ─── PARSER ──────────────────────────────────────────────────────────────────
+const CORE_MODELS = ['CF Core','CFS Core','CF Active Core','CF Faith Based Core','CF Faith Based Hybrid Core','CF Mutual Fund Core','Advisor Custom Core'];
+// Map every code variant (case-insensitive) → canonical code
+const CODE_MAP = {
+  'tacrs':'TACRS','ac tactical':'AC Tactical','actactical':'AC Tactical',
+  'ss':'SS','fbss':'FBSS','growth':'Growth','value':'Value','income':'Income',
+  'garp':'GARP','is':'IS','ac stock':'AC Stock','acstock':'AC Stock',
+  'lcg':'LCG','lcg+':'LCG+','lcv':'LCV','lcv+':'LCV+',
+  'smidg':'SMIDG','smidg+':'SMIDG+','smidv':'SMIDV','smidv+':'SMIDV+',
+  'dm':'DM','em':'EM','int':'INT','int+':'INT+',
+  'gld':'GLD','slv':'SLV','crypto':'Crypto',
+  'hedged':'Hedged','hedged equity':'Hedged'
+};
+
+let _parsed = null; // holds last parsed result for applyParsed()
+
+function parseModelName() {
+  const raw = document.getElementById('importInput').value.trim();
+  if (!raw) return;
+
+  const result = { coreModel:null, riskLevel:null, hedgedMode:null, equitySplit:null, customFI:false, muni:false, sleeves:{}, warnings:[], advisorInitials:null };
+
+  // Split on commas — first segment is always "CoreModel RiskLevel[+/Unhedged]"
+  const parts = raw.split(',').map(p => p.trim());
+  const head  = parts[0];
+
+  // Check for Advisor Custom pattern: "AC {2-3 initials} Core {risk}"
+  const acMatch = head.match(/^AC\s+([A-Za-z]{2,3})\s+Core\s+(\d+)(\+|\s+Unhedged)?/i);
+  if (acMatch) {
+    result.coreModel       = 'Advisor Custom Core';
+    result.advisorInitials = acMatch[1].toUpperCase();
+    result.riskLevel       = acMatch[2];
+    const suffix = (acMatch[3] || '').trim().toLowerCase();
+    if (suffix === '+')          result.hedgedMode = 'plus';
+    else if (suffix === 'unhedged') result.hedgedMode = 'unhedged';
+    else                            result.hedgedMode = 'none';
+  } else {
+    // Standard core model extraction (longest match first)
+    const sortedModels = [...CORE_MODELS].sort((a,b) => b.length - a.length);
+    let matchedModel = null;
+    let afterModel   = head;
+    for (const m of sortedModels) {
+      if (head.toLowerCase().startsWith(m.toLowerCase())) {
+        matchedModel = m;
+        afterModel   = head.slice(m.length).trim();
+        break;
+      }
+    }
+    if (!matchedModel) result.warnings.push(`Could not identify a Core Model in "${head}".`);
+    else result.coreModel = matchedModel;
+
+    // Extract risk level + hedged suffix
+    const riskMatch = afterModel.match(/^(\d+)(\+|\s+Unhedged)?/i);
+    if (riskMatch) {
+      result.riskLevel = riskMatch[1];
+      const suffix = (riskMatch[2] || '').trim().toLowerCase();
+      if (suffix === '+')             result.hedgedMode = 'plus';
+      else if (suffix === 'unhedged') result.hedgedMode = 'unhedged';
+      else                            result.hedgedMode = 'none';
+    } else {
+      result.warnings.push(`Could not identify a Risk Level in "${afterModel}".`);
+    }
+  }
+
+  // Parse remaining segments
+  for (let i = 1; i < parts.length; i++) {
+    const seg = parts[i].trim();
+    if (!seg) continue;
+
+    // Equity split: "60/40 US Core"
+    const equityMatch = seg.match(/^(\d+)\/(\d+)\s+US\s+Core$/i);
+    if (equityMatch) {
+      result.equitySplit = { us: parseInt(equityMatch[1]), intl: parseInt(equityMatch[2]) };
+      continue;
+    }
+
+    // Advisor Custom FI — standard or AC initials pattern
+    if (/^advisor\s+custom\s+fi$/i.test(seg)) { result.customFI = true; continue; }
+    if (/^AC\s+[A-Za-z]{2,3}\s+FI$/i.test(seg)) { result.customFI = true; continue; }
+
+    // Muni split: "75/25 Muni"
+    const muniMatch = seg.match(/^(\d+)\/(\d+)\s+Muni$/i);
+    if (muniMatch) {
+      result.muni = true;
+      result.muniSplit = { muni: parseInt(muniMatch[1]), core: parseInt(muniMatch[2]) };
+      continue;
+    }
+
+    // AC initials Stock: "20 AC AR Stock" → AC Stock sleeve
+    const acStockMatch = seg.match(/^([\d.]+)\s+AC\s+[A-Za-z]{2,3}\s+Stock$/i);
+    if (acStockMatch) { result.sleeves['AC Stock'] = parseFloat(acStockMatch[1]); continue; }
+
+    // AC initials Tactical: "15 AC AR Tactical" → AC Tactical sleeve
+    const acTacticalMatch = seg.match(/^([\d.]+)\s+AC\s+[A-Za-z]{2,3}\s+Tactical$/i);
+    if (acTacticalMatch) { result.sleeves['AC Tactical'] = parseFloat(acTacticalMatch[1]); continue; }
+
+    // Standard sleeve: "{weight} {code}"
+    const sleeveMatch = seg.match(/^([\d.]+)\s+(.+)$/);
+    if (sleeveMatch) {
+      const weight  = parseFloat(sleeveMatch[1]);
+      const codeRaw = sleeveMatch[2].trim().toLowerCase();
+      const code    = CODE_MAP[codeRaw];
+      if (code) {
+        result.sleeves[code] = weight;
+      } else {
+        result.warnings.push(`Unknown sleeve code: "${sleeveMatch[2]}"`);
+      }
+      continue;
+    }
+
+    result.warnings.push(`Could not parse segment: "${seg}"`);
+  }
+
+  _parsed = result;
+  renderParsePreview(result);
+}
+
+function renderParsePreview(r) {
+  const preview  = document.getElementById('parsePreview');
+  const body     = document.getElementById('parseBody');
+  const warnings = document.getElementById('parseWarnings');
+  const count    = document.getElementById('parseCount');
+
+  const items = [];
+
+  if (r.coreModel) {
+    let coreDisplay = r.coreModel;
+    if (r.advisorInitials) coreDisplay += ` (Initials: ${r.advisorInitials})`;
+    items.push({ label:'Core Model', value: coreDisplay });
+  }
+  else             items.push({ label:'Core Model', warn:'Not found' });
+
+  if (r.riskLevel) {
+    let riskDisplay = `${r.riskLevel}%`;
+    if (r.hedgedMode === 'plus')     riskDisplay += ' (Hedged 10% default)';
+    if (r.hedgedMode === 'unhedged') riskDisplay += ' (Hedged 0%)';
+    items.push({ label:'Risk Level', value: riskDisplay });
+  } else {
+    items.push({ label:'Risk Level', warn:'Not found' });
+  }
+
+  if (r.equitySplit) items.push({ label:'Equity Split', value:`${r.equitySplit.us}% US / ${r.equitySplit.intl}% International` });
+  else               items.push({ label:'Equity Split', value:'Default (80/20)' });
+
+  if (r.customFI)       items.push({ label:'Fixed Income', value:'Advisor Custom FI' });
+  else if (r.muni && r.muniSplit) items.push({ label:'Fixed Income', value:`${r.muniSplit.muni}% Muni / ${r.muniSplit.core}% Core` });
+  else if (r.muni)      items.push({ label:'Fixed Income', value:'Muni split enabled' });
+  else                  items.push({ label:'Fixed Income', value:'Default (100% Core)' });
+
+  Object.entries(r.sleeves).forEach(([code, weight]) => {
+    items.push({ label: SLEEVE_LABELS[code] || code, value:`${weight}%` });
+  });
+
+  const warnCount = r.warnings.length;
+  const okCount   = items.filter(i => !i.warn).length;
+  count.textContent = `${okCount} detected${warnCount ? ', ' + warnCount + ' warning' + (warnCount>1?'s':'') : ''}`;
+
+  body.innerHTML = items.map(item => `
+    <div class="parse-item">
+      <div class="pi-dot${item.warn ? ' warn':''}"></div>
+      <span class="pi-label">${item.label}</span>
+      ${item.warn
+        ? `<span class="pi-warn">⚠ ${item.warn}</span>`
+        : `<span class="pi-value">${item.value}</span>`}
+    </div>`).join('');
+
+  if (warnCount > 0) {
+    warnings.innerHTML = r.warnings.map(w => `<div>⚠ ${w}</div>`).join('');
+    warnings.className = 'parse-warnings show';
+  } else {
+    warnings.className = 'parse-warnings';
+  }
+
+  preview.className = 'parse-preview show';
+}
+
+function applyParsed() {
+  if (!_parsed) return;
+  const r = _parsed;
+
+  // Reset first
+  resetAll();
+
+  // Core model
+  if (r.coreModel) document.getElementById('coreModel').value = r.coreModel;
+
+  // Risk level
+  if (r.riskLevel) {
+    document.getElementById('riskLevel').value = r.riskLevel;
+    // Set hedged based on suffix
+    const hedgedSel = document.getElementById('sleeve-Hedged');
+    if (r.hedgedMode === 'plus')     hedgedSel.value = '10';
+    else if (r.hedgedMode === 'unhedged') hedgedSel.value = '0';
+    else if (parseInt(r.riskLevel) > 5)  hedgedSel.value = '10'; // default
+  }
+
+  // Equity split
+  if (r.equitySplit) {
+    document.getElementById('equitySplitToggle').checked = true;
+    document.getElementById('equitySplitRows').style.display = 'block';
+    document.getElementById('usCore').value   = r.equitySplit.us;
+    document.getElementById('intlCore').value = r.equitySplit.intl;
+    onEquityChange('us');
+  }
+
+  // Custom FI
+  if (r.customFI) {
+    document.getElementById('customFIToggle').checked = true;
+    onCustomFIToggle();
+  } else if (r.muni) {
+    document.getElementById('fiSplitToggle').checked = true;
+    document.getElementById('fiSplitRows').style.display = 'block';
+    if (r.muniSplit) {
+      document.getElementById('cfCoreFI').value   = r.muniSplit.core;
+      document.getElementById('muniCoreFI').value = r.muniSplit.muni;
+    } else {
+      document.getElementById('cfCoreFI').value   = '50';
+      document.getElementById('muniCoreFI').value = '50';
+    }
+  }
+
+  // Sleeves
+  Object.entries(r.sleeves).forEach(([code, weight]) => {
+    const sel = document.querySelector(`.sleeve-select[data-code="${code}"]`);
+    if (sel) sel.value = weight;
+  });
+
+  // Hide preview, clear input
+  cancelParse();
+  recalc();
+}
+
+function cancelParse() {
+  document.getElementById('parsePreview').className = 'parse-preview';
+  document.getElementById('importInput').value = '';
+  _parsed = null;
+}
+
+// ─── RESET ───────────────────────────────────────────────────────────────────
+function resetAll() {
+  document.getElementById('coreModel').value  = '';
+  document.getElementById('riskLevel').value  = '';
+  document.getElementById('equitySplitToggle').checked = false;
+  document.getElementById('fiSplitToggle').checked     = false;
+  document.getElementById('customFIToggle').checked    = false;
+  document.getElementById('usCore').value     = '80';
+  document.getElementById('intlCore').value   = '20';
+  document.getElementById('cfCoreFI').value   = '100';
+  document.getElementById('muniCoreFI').value = '0';
+  document.getElementById('equitySplitRows').style.display    = 'none';
+  document.getElementById('fiSplitRows').style.display        = 'none';
+  document.getElementById('fiSplitToggleRow').style.display   = 'flex';
+  document.getElementById('customFIInheritedRow').style.display = 'none';
+  document.querySelectorAll('.sleeve-select').forEach(s => s.value = '0');
+  recalc();
+}
+</script>
+</body>
+</html>
